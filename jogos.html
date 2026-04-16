@@ -6,36 +6,29 @@
     <title>Jogos - Tancredo Destroyer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
         body { font-family: 'Roboto', sans-serif; background-color: #0f0f1a; color: white; overflow-x: hidden; }
         .font-gaming { font-family: 'Orbitron', sans-serif; }
         .admin-modal, .auth-modal { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); }
         .text-glow { text-shadow: 0 0 10px rgba(233, 69, 96, 0.5); }
-        .tab-btn.active { border-bottom: 3px solid #e94560; color: #e94560; }
         .crown-active { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
         ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 10px; }
 
-        .btn-google {
-            background: white;
-            color: #444;
-            transition: all 0.3s ease;
+        .game-card {
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
-        .btn-google:hover {
-            background: #f1f1f1;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        .game-card:hover {
+            transform: translateY(-5px);
         }
     </style>
 </head>
 <body class="min-h-screen pb-20">
 
-    <!-- Header -->
+    <!-- Header Principal -->
     <header class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0f0f1a] sticky top-0 z-40">
         <div class="flex items-center gap-6">
             <a href="#" class="font-gaming text-[#e94560] text-xl tracking-tighter hover:opacity-80 transition">
@@ -51,15 +44,21 @@
         </div>
     </header>
 
+    <!-- Conteúdo Principal -->
     <main class="container mx-auto px-6 py-12">
         <h2 class="font-gaming text-3xl md:text-5xl text-center mb-16 text-glow uppercase tracking-widest">Biblioteca de Jogos</h2>
-        <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></div>
+        
+        <!-- Grid de Jogos -->
+        <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Jogos inseridos via JavaScript -->
+        </div>
     </main>
 
-    <!-- Modal de Admin -->
+    <!-- Modal de Administração -->
     <div id="adminModal" class="fixed inset-0 admin-modal hidden z-50 flex items-center justify-center p-4">
         <div class="bg-[#1a1a2e] border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             
+            <!-- Login Admin -->
             <div id="adminLogin" class="p-8 text-center">
                 <h3 class="font-gaming text-xl mb-6 text-[#e94560]">Acesso Restrito</h3>
                 <input type="password" id="adminSecretInput" placeholder="Senha ADM" class="bg-[#0f0f1a] border border-gray-600 p-4 rounded-lg mb-6 outline-none focus:border-[#e94560] text-center w-full max-w-xs block mx-auto tracking-widest">
@@ -69,17 +68,32 @@
                 </div>
             </div>
 
+            <!-- Painel Admin -->
             <div id="adminPanel" class="hidden flex flex-col h-full">
                 <div class="flex bg-[#0f0f1a] p-2 gap-1 overflow-x-auto border-b border-gray-800">
                     <button onclick="setAdminTab('add')" id="adminTabAdd" class="px-4 py-3 font-gaming text-[10px] rounded-lg">NOVO JOGO</button>
                     <button onclick="setAdminTab('manage')" id="adminTabManage" class="px-4 py-3 font-gaming text-[10px] rounded-lg hover:bg-white/5">GERENCIAR</button>
-                    <button onclick="setAdminTab('users')" id="adminTabUsers" class="px-4 py-3 font-gaming text-[10px] rounded-lg hover:bg-white/5">USUÁRIOS</button>
-                    <button onclick="checkMasterAccess()" id="adminTabMaster" class="px-4 py-3 font-gaming text-[10px] rounded-lg text-red-400 border border-red-500/20">ARQUIVOS MESTRES</button>
+                    <button onclick="setAdminTab('users')" id="adminTabUsers" class="px-4 py-3 font-gaming text-[10px] rounded-lg hover:bg-white/5">UTILIZADORES</button>
+                    <button onclick="setAdminTab('backup')" id="adminTabBackup" class="px-4 py-3 font-gaming text-[10px] rounded-lg text-blue-400">BACKUP</button>
                     <button onclick="closeAdmin()" class="ml-auto px-4 py-3 text-gray-500"><i class="fas fa-times"></i></button>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-6">
-                    <!-- Aba Usuários -->
+                    <!-- Aba Backup -->
+                    <div id="panelBackup" class="hidden text-center space-y-6">
+                        <i class="fas fa-file-export text-4xl text-blue-500"></i>
+                        <h4 class="font-gaming">Gestão de Dados Locais</h4>
+                        <p class="text-xs text-gray-400">Descarregue ou carregue a sua lista de jogos personalizada para evitar perdas.</p>
+                        <div class="flex flex-col gap-3 max-w-xs mx-auto">
+                            <button onclick="exportarDados()" class="bg-blue-600 py-3 rounded-xl font-bold text-xs uppercase hover:bg-blue-500 transition">Exportar Ficheiro JSON</button>
+                            <label class="bg-gray-700 py-3 rounded-xl font-bold text-xs uppercase cursor-pointer hover:bg-gray-600 transition">
+                                Importar Ficheiro JSON
+                                <input type="file" id="importFile" class="hidden" onchange="importarDados(event)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Aba Utilizadores -->
                     <div id="panelUsers" class="hidden">
                         <table class="w-full text-left">
                             <thead class="text-[10px] text-gray-500 uppercase border-b border-gray-800">
@@ -93,55 +107,15 @@
                         </table>
                     </div>
 
-                    <!-- Aba Arquivos Mestres -->
-                    <div id="panelMaster" class="hidden space-y-6">
-                        <div class="p-8 bg-red-900/5 border border-red-500/20 rounded-2xl text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-exclamation-triangle text-yellow-500 mb-2"></i>
-                                <p class="text-[10px] text-yellow-500 uppercase font-bold">Aviso sobre Erro 400 (redirect_uri_mismatch)</p>
-                                <p class="text-[9px] text-gray-400 max-w-md mx-auto">Para usar o Google Drive aqui, você deve adicionar a URL atual deste preview nas <b>"Origens JavaScript Autorizadas"</b> no Console do Google Cloud.</p>
-                            </div>
-
-                            <i class="fas fa-cloud-upload-alt text-4xl text-[#e94560] mb-4"></i>
-                            <h4 class="font-gaming text-lg text-white mb-2">GOOGLE DRIVE SYNC</h4>
-                            
-                            <div id="googleConfig" class="mb-6 max-w-sm mx-auto">
-                                <p class="text-[10px] text-gray-500 mb-2 uppercase">Google Client ID</p>
-                                <input type="text" id="googleClientId" placeholder="Cole seu Google Client ID aqui" class="w-full bg-black border border-gray-700 p-2 rounded text-[10px] text-white outline-none focus:border-[#e94560] mb-4">
-                                <button onclick="saveGoogleConfig()" class="text-[10px] bg-gray-800 px-4 py-1 rounded hover:bg-gray-700">SALVAR E RECARREGAR</button>
-                            </div>
-
-                            <div id="googleProfile" class="hidden mb-6 bg-black/40 p-4 rounded-xl border border-gray-700 flex items-center justify-between text-left">
-                                <div class="flex items-center gap-3">
-                                    <img id="googleImg" src="" class="w-10 h-10 rounded-full border border-[#e94560]">
-                                    <div>
-                                        <p id="googleName" class="text-sm font-bold"></p>
-                                        <p id="googleEmail" class="text-[10px] text-gray-500"></p>
-                                    </div>
-                                </div>
-                                <span class="text-[9px] px-2 py-1 rounded bg-green-500/20 text-green-400 font-bold">ATIVO</span>
-                            </div>
-
-                            <div class="flex flex-col gap-3 max-w-xs mx-auto">
-                                <button id="btnGoogleConnect" onclick="startGoogleAuth()" class="w-full py-4 btn-google rounded-xl font-bold text-xs flex items-center justify-center gap-2">
-                                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-4 h-4">
-                                    CONECTAR GOOGLE DRIVE
-                                </button>
-                                <div id="syncControls" class="hidden flex flex-col gap-3">
-                                    <button onclick="manualBackup()" class="w-full py-4 bg-[#e94560] text-white rounded-xl font-bold text-xs">SINCRONIZAR AGORA</button>
-                                    <button onclick="disconnectGoogle()" class="text-xs text-gray-500 underline">Desconectar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <!-- Aba Adicionar Jogo -->
                     <div id="panelAdd" class="space-y-4">
                          <input type="text" id="gameName" placeholder="Nome do Jogo" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <input type="text" id="gameBanner" placeholder="URL da Capa" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <input type="text" id="gameUrl" placeholder="URL do Jogo" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <button onclick="saveGame()" class="w-full bg-[#e94560] py-4 rounded-lg font-gaming text-sm">CRIAR JOGO</button>
+                         <input type="text" id="gameBanner" placeholder="URL da Imagem de Capa" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
+                         <input type="text" id="gameUrl" placeholder="URL do Jogo (ex: Eaglercraft_1.12.html)" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
+                         <button onclick="saveGame()" class="w-full bg-[#e94560] py-4 rounded-lg font-gaming text-sm hover:bg-[#ff4d6d] transition">REGISTAR JOGO</button>
                     </div>
                     
+                    <!-- Aba Gerir Jogos -->
                     <div id="panelManage" class="hidden space-y-2">
                         <div id="adminGamesList"></div>
                     </div>
@@ -150,120 +124,86 @@
         </div>
     </div>
 
-    <!-- Modal de Login -->
+    <!-- Modal de Autenticação -->
     <div id="authModal" class="fixed inset-0 auth-modal hidden z-50 flex items-center justify-center p-4">
         <div class="bg-[#1a1a2e] border border-gray-700 p-8 rounded-2xl w-full max-w-md">
-            <h3 class="font-gaming text-center mb-6">Login / Cadastro</h3>
-            <input type="text" id="authUser" placeholder="Usuário" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg mb-3">
+            <h3 class="font-gaming text-center mb-6">Acesso à Conta</h3>
+            <input type="text" id="authUser" placeholder="Utilizador" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg mb-3">
             <input type="password" id="authPass" placeholder="Senha" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg mb-6">
-            <button onclick="handleUserAuth()" class="w-full bg-[#e94560] py-3 rounded-lg font-bold font-gaming text-xs">CONFIRMAR</button>
-            <button onclick="closeAuth()" class="w-full mt-4 text-gray-500 text-xs">VOLTAR</button>
+            <button onclick="handleUserAuth()" class="w-full bg-[#e94560] py-3 rounded-lg font-bold font-gaming text-xs">ENTRAR / REGISTAR</button>
+            <button onclick="closeAuth()" class="w-full mt-4 text-gray-500 text-xs hover:text-white transition">VOLTAR</button>
         </div>
     </div>
 
     <script>
         const DB_NAME = "TancredoDB";
-        const STORES = { GAMES: "games", USERS: "users", SAVES: "saves" };
+        const STORES = { GAMES: "games", USERS: "users" };
         const ADMIN_PASS = "qwertyuiop";
-        const MASTER_PASS = "qwertyuiop1234567890";
-        const DEFAULT_CLIENT_ID = "479833797508-1mv6n1hbeb03nn2vqmaubqteo258q1kk.apps.googleusercontent.com";
         
+        // Jogo Fixo: Minecraft (Sempre presente)
+        const FIXED_GAMES = [
+            {
+                id: "fixed-mc",
+                name: "Minecraft 1.12.2",
+                banner: "https://imgs.search.brave.com/VtV36_mMkG2HfhPS-Isq57xJZvzuMnhFZsQAtzjrbQY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9taW5l/Y3JhZnRzaG9wLmNv/bS5ici9hc3NldHMv/aW1nL3pnb21leHMu/anBn",
+                url: "Eaglercraft_1.12_Offline_en_US.html"
+            }
+        ];
+
         let db;
         let currentUser = JSON.parse(localStorage.getItem('td_session')) || null;
-        let googleToken = null;
-        let googleClientId = localStorage.getItem('google_client_id') || DEFAULT_CLIENT_ID;
 
-        // --- DATABASE ---
+        // --- Inicialização da Base de Dados ---
         const req = indexedDB.open(DB_NAME, 3);
         req.onupgradeneeded = (e) => {
             const d = e.target.result;
             if(!d.objectStoreNames.contains(STORES.GAMES)) d.createObjectStore(STORES.GAMES, { keyPath: "id", autoIncrement: true });
             if(!d.objectStoreNames.contains(STORES.USERS)) d.createObjectStore(STORES.USERS, { keyPath: "username" });
-            if(!d.objectStoreNames.contains(STORES.SAVES)) d.createObjectStore(STORES.SAVES, { keyPath: "id", autoIncrement: true });
         };
         req.onsuccess = (e) => {
             db = e.target.result;
             renderGames();
             updateUserUI();
-            document.getElementById('googleClientId').value = googleClientId;
         };
 
-        function saveGoogleConfig() {
-            googleClientId = document.getElementById('googleClientId').value.trim();
-            localStorage.setItem('google_client_id', googleClientId);
-            location.reload();
+        // --- Funções de Backup ---
+        async function exportarDados() {
+            const list = await getAllFromStore(STORES.GAMES);
+            const blob = new Blob([JSON.stringify(list, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_jogos_tancredo_${new Date().getTime()}.json`;
+            a.click();
         }
 
-        // --- GOOGLE DRIVE ---
-        function startGoogleAuth() {
-            if(!googleClientId) return alert("Por favor, insira o Client ID do Google primeiro.");
-            
-            try {
-                // Usando o novo Google Identity Services Token Client
-                const client = google.accounts.oauth2.initTokenClient({
-                    client_id: googleClientId,
-                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                    callback: (response) => {
-                        if (response.error) {
-                            console.error("Erro Google:", response.error);
-                            if(response.error === "idpiframe_initialization_failed") {
-                                alert("O Google bloqueou a inicialização. Verifique se as Origens JavaScript Autorizadas no Google Cloud incluem este domínio.");
-                            } else {
-                                alert("Erro na autenticação: " + response.error);
-                            }
-                            return;
-                        }
-                        if (response.access_token) {
-                            googleToken = response.access_token;
-                            fetchGoogleProfile(googleToken);
-                        }
-                    },
-                });
-                client.requestAccessToken();
-            } catch (err) {
-                console.error("Erro Fatal:", err);
-                alert("Não foi possível abrir o login do Google. Certifique-se de que as Origens JavaScript Autorizadas estão corretas no Console do Google Cloud.");
-            }
-        }
-
-        async function fetchGoogleProfile(token) {
-            try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const profile = await res.json();
-                document.getElementById('googleProfile').classList.remove('hidden');
-                document.getElementById('googleImg').src = profile.picture;
-                document.getElementById('googleName').innerText = profile.name;
-                document.getElementById('googleEmail').innerText = profile.email;
-                document.getElementById('btnGoogleConnect').classList.add('hidden');
-                document.getElementById('syncControls').classList.remove('hidden');
-                autoSaveToCloud();
-            } catch (err) { console.error(err); }
-        }
-
-        function disconnectGoogle() {
-            googleToken = null;
-            document.getElementById('googleProfile').classList.add('hidden');
-            document.getElementById('btnGoogleConnect').classList.remove('hidden');
-            document.getElementById('syncControls').classList.add('hidden');
-        }
-
-        async function autoSaveToCloud() {
-            if (!googleToken) return;
-            const data = {
-                games: await getAllFromStore(STORES.GAMES),
-                users: await getAllFromStore(STORES.USERS),
-                saves: await getAllFromStore(STORES.SAVES),
-                date: new Date().toISOString()
+        function importarDados(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const games = JSON.parse(e.target.result);
+                    const tx = db.transaction([STORES.GAMES], "readwrite");
+                    const store = tx.objectStore(STORES.GAMES);
+                    games.forEach(g => {
+                        if (g.id && typeof g.id === 'string' && g.id.startsWith('fixed')) return; // ignora fixos
+                        delete g.id; 
+                        store.add(g);
+                    });
+                    tx.oncomplete = () => { renderGames(); alert("Jogos importados com sucesso!"); };
+                } catch (err) {
+                    alert("Erro ao importar ficheiro. Formato inválido.");
+                }
             };
-            console.log("Simulando Backup para o Google Drive:", data);
+            reader.readAsText(file);
         }
 
         function getAllFromStore(storeName) {
             return new Promise(resolve => {
                 const list = [];
-                db.transaction([storeName], "readonly").objectStore(storeName).openCursor().onsuccess = e => {
+                const tx = db.transaction([storeName], "readonly");
+                tx.objectStore(storeName).openCursor().onsuccess = e => {
                     const cursor = e.target.result;
                     if(cursor) { list.push(cursor.value); cursor.continue(); }
                     else resolve(list);
@@ -271,7 +211,7 @@
             });
         }
 
-        // --- ADMIN & CROWN ---
+        // --- Administração ---
         function handleAdminAccess() {
             if (currentUser && currentUser.isCrown) {
                 document.getElementById('adminModal').classList.remove('hidden');
@@ -296,17 +236,11 @@
                 document.getElementById('adminLogin').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 setAdminTab('add');
-            } else { alert("Senha Errada"); }
-        }
-
-        function checkMasterAccess() {
-            const p = prompt("SENHA ARQUIVOS MESTRES:");
-            if(p === MASTER_PASS) setAdminTab('master');
-            else alert("Acesso Negado");
+            } else { alert("Acesso Negado: Senha Incorreta."); }
         }
 
         function setAdminTab(tab) {
-            ['add', 'manage', 'users', 'master'].forEach(t => {
+            ['add', 'manage', 'users', 'backup'].forEach(t => {
                 const el = document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`);
                 const btn = document.getElementById(`adminTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
                 if(el) el.classList.add('hidden');
@@ -334,7 +268,7 @@
                             </td>
                             <td class="p-3 font-bold">${u.username}</td>
                             <td class="p-3 text-right">
-                                <button onclick="deleteUser('${u.username}')" class="text-red-500">Deletar</button>
+                                <button onclick="deleteUser('${u.username}')" class="text-red-500 hover:underline">Eliminar</button>
                             </td>
                         </tr>
                     `;
@@ -356,32 +290,27 @@
                         updateUserUI();
                     }
                     loadAdminUsers();
-                    autoSaveToCloud();
                 };
             };
         }
 
         function deleteUser(username) {
-            if(confirm("Remover usuário?")) {
-                db.transaction([STORES.USERS], "readwrite").objectStore(STORES.USERS).delete(username).onsuccess = () => {
-                    loadAdminUsers();
-                    autoSaveToCloud();
-                };
+            if(confirm(`Tem a certeza que deseja remover ${username}?`)) {
+                db.transaction([STORES.USERS], "readwrite").objectStore(STORES.USERS).delete(username).onsuccess = loadAdminUsers;
             }
         }
 
-        // --- GAMES ---
+        // --- Gestão de Jogos ---
         function saveGame() {
             const name = document.getElementById('gameName').value;
             const banner = document.getElementById('gameBanner').value;
             const url = document.getElementById('gameUrl').value;
-            if(!name || !banner || !url) return alert("Preencha tudo");
+            if(!name || !banner || !url) return alert("Por favor, preencha todos os campos.");
 
             const tx = db.transaction([STORES.GAMES], "readwrite");
             tx.objectStore(STORES.GAMES).add({ name, banner, url });
             tx.oncomplete = () => {
                 renderGames();
-                autoSaveToCloud();
                 setAdminTab('manage');
                 document.getElementById('gameName').value = '';
                 document.getElementById('gameBanner').value = '';
@@ -398,8 +327,8 @@
                     const g = cursor.value;
                     div.innerHTML += `
                         <div class="flex justify-between items-center bg-[#0f0f1a] p-3 rounded-lg border border-gray-800">
-                            <span class="text-xs uppercase">${g.name}</span>
-                            <button onclick="deleteGame(${g.id})" class="text-red-500 text-[10px]">DELETAR</button>
+                            <span class="text-xs uppercase font-bold">${g.name}</span>
+                            <button onclick="deleteGame(${g.id})" class="text-red-500 text-[10px] hover:underline">REMOVER</button>
                         </div>
                     `;
                     cursor.continue();
@@ -408,11 +337,10 @@
         }
 
         function deleteGame(id) {
-            if(confirm("Remover jogo?")) {
+            if(confirm("Deseja remover este jogo da sua lista?")) {
                 db.transaction([STORES.GAMES], "readwrite").objectStore(STORES.GAMES).delete(id).onsuccess = () => {
                     loadAdminGames();
                     renderGames();
-                    autoSaveToCloud();
                 };
             }
         }
@@ -420,32 +348,50 @@
         function renderGames() {
             const grid = document.getElementById('gamesGrid');
             grid.innerHTML = '';
+
+            // 1. Mostrar sempre o Minecraft primeiro
+            FIXED_GAMES.forEach(g => {
+                grid.innerHTML += createGameCard(g, true);
+            });
+
+            // 2. Mostrar jogos da Base de Dados
             db.transaction([STORES.GAMES], "readonly").objectStore(STORES.GAMES).openCursor().onsuccess = e => {
                 const cursor = e.target.result;
                 if(cursor) {
-                    const g = cursor.value;
-                    grid.innerHTML += `
-                        <div class="bg-[#1a1a2e] rounded-xl overflow-hidden border border-gray-800 group transition hover:border-[#e94560]">
-                            <img src="${g.banner}" class="w-full aspect-video object-cover">
-                            <div class="p-4 flex justify-between items-center">
-                                <span class="text-xs font-bold uppercase truncate">${g.name}</span>
-                                <button onclick="window.open('${g.url}')" class="w-8 h-8 bg-[#e94560] rounded-full flex items-center justify-center"><i class="fas fa-play text-[10px]"></i></button>
-                            </div>
-                        </div>
-                    `;
+                    grid.innerHTML += createGameCard(cursor.value, false);
                     cursor.continue();
                 }
             };
         }
 
-        // --- AUTH ---
+        function createGameCard(g, isFixed) {
+            return `
+                <div class="game-card bg-[#1a1a2e] rounded-xl overflow-hidden border ${isFixed ? 'border-yellow-500/40 shadow-lg shadow-yellow-500/5' : 'border-gray-800'} group relative">
+                    ${isFixed ? '<span class="absolute top-3 left-3 bg-yellow-500 text-black text-[9px] font-bold px-3 py-1 rounded-full z-10 shadow-md">PADRÃO</span>' : ''}
+                    <div class="relative overflow-hidden aspect-video">
+                        <img src="${g.banner}" alt="${g.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                             <button onclick="window.open('${g.url}')" class="bg-[#e94560] px-6 py-2 rounded-lg font-gaming text-xs">JOGAR AGORA</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-gradient-to-t from-black/20 to-transparent">
+                        <span class="text-xs font-bold uppercase truncate pr-2 tracking-wider">${g.name}</span>
+                        <button onclick="window.open('${g.url}')" class="w-9 h-9 bg-white/5 hover:bg-[#e94560] rounded-full flex items-center justify-center transition shrink-0">
+                            <i class="fas fa-play text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Autenticação ---
         function openAuth() { document.getElementById('authModal').classList.remove('hidden'); }
         function closeAuth() { document.getElementById('authModal').classList.add('hidden'); }
         
         function handleUserAuth() {
-            const u = document.getElementById('authUser').value;
+            const u = document.getElementById('authUser').value.trim();
             const p = document.getElementById('authPass').value;
-            if(!u || !p) return;
+            if(!u || !p) return alert("Insira os dados de login.");
 
             const tx = db.transaction([STORES.USERS], "readwrite");
             const store = tx.objectStore(STORES.USERS);
@@ -453,7 +399,7 @@
                 const user = e.target.result;
                 if(user) {
                     if(user.password === p) login(user);
-                    else alert("Senha Incorreta");
+                    else alert("Utilizador existente: Senha Incorreta.");
                 } else {
                     const newUser = { username: u, password: p, isCrown: false };
                     store.add(newUser);
@@ -467,7 +413,6 @@
             localStorage.setItem('td_session', JSON.stringify(user));
             updateUserUI();
             closeAuth();
-            autoSaveToCloud();
         }
 
         function logout() {
@@ -485,19 +430,13 @@
                             ${currentUser.username[0].toUpperCase()}
                             ${currentUser.isCrown ? '<i class="fas fa-crown absolute -top-1 -right-1 text-[8px] text-yellow-400"></i>' : ''}
                         </div>
-                        <span class="text-[10px] font-bold uppercase">${currentUser.username}</span>
-                        <button onclick="logout()" class="text-gray-500 hover:text-white"><i class="fas fa-power-off text-xs"></i></button>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">${currentUser.username}</span>
+                        <button onclick="logout()" class="text-gray-500 hover:text-white transition"><i class="fas fa-power-off text-xs"></i></button>
                     </div>
                 `;
             } else {
-                area.innerHTML = `<button onclick="openAuth()" class="bg-[#e94560] px-6 py-2 rounded-lg font-gaming text-xs">LOG IN</button>`;
+                area.innerHTML = `<button onclick="openAuth()" class="bg-[#e94560] px-6 py-2 rounded-lg font-gaming text-xs hover:bg-[#ff4d6d] transition">LOG IN</button>`;
             }
-        }
-
-        function manualBackup() {
-            if(!googleToken) return alert("Conecte ao Google primeiro");
-            autoSaveToCloud();
-            alert("Sincronizado com Sucesso!");
         }
     </script>
 </body>
