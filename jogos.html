@@ -20,6 +20,17 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
         ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 10px; }
+
+        .btn-google {
+            background: white;
+            color: #444;
+            transition: all 0.3s ease;
+        }
+        .btn-google:hover {
+            background: #f1f1f1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -85,13 +96,19 @@
                     <!-- Aba Arquivos Mestres -->
                     <div id="panelMaster" class="hidden space-y-6">
                         <div class="p-8 bg-red-900/5 border border-red-500/20 rounded-2xl text-center">
+                            <div class="mb-4">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mb-2"></i>
+                                <p class="text-[10px] text-yellow-500 uppercase font-bold">Aviso sobre Erro 400 (redirect_uri_mismatch)</p>
+                                <p class="text-[9px] text-gray-400 max-w-md mx-auto">Para usar o Google Drive aqui, você deve adicionar a URL atual deste preview nas <b>"Origens JavaScript Autorizadas"</b> no Console do Google Cloud.</p>
+                            </div>
+
                             <i class="fas fa-cloud-upload-alt text-4xl text-[#e94560] mb-4"></i>
                             <h4 class="font-gaming text-lg text-white mb-2">GOOGLE DRIVE SYNC</h4>
                             
                             <div id="googleConfig" class="mb-6 max-w-sm mx-auto">
-                                <p class="text-[10px] text-gray-500 mb-2 uppercase">Configuração de Desenvolvedor</p>
+                                <p class="text-[10px] text-gray-500 mb-2 uppercase">Google Client ID</p>
                                 <input type="text" id="googleClientId" placeholder="Cole seu Google Client ID aqui" class="w-full bg-black border border-gray-700 p-2 rounded text-[10px] text-white outline-none focus:border-[#e94560] mb-4">
-                                <button onclick="saveGoogleConfig()" class="text-[10px] bg-gray-800 px-4 py-1 rounded hover:bg-gray-700">SALVAR CONFIG</button>
+                                <button onclick="saveGoogleConfig()" class="text-[10px] bg-gray-800 px-4 py-1 rounded hover:bg-gray-700">SALVAR E RECARREGAR</button>
                             </div>
 
                             <div id="googleProfile" class="hidden mb-6 bg-black/40 p-4 rounded-xl border border-gray-700 flex items-center justify-between text-left">
@@ -106,7 +123,7 @@
                             </div>
 
                             <div class="flex flex-col gap-3 max-w-xs mx-auto">
-                                <button id="btnGoogleConnect" onclick="startGoogleAuth()" class="w-full py-4 bg-white text-black rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                <button id="btnGoogleConnect" onclick="startGoogleAuth()" class="w-full py-4 btn-google rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                                     <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-4 h-4">
                                     CONECTAR GOOGLE DRIVE
                                 </button>
@@ -174,7 +191,7 @@
         function saveGoogleConfig() {
             googleClientId = document.getElementById('googleClientId').value.trim();
             localStorage.setItem('google_client_id', googleClientId);
-            alert("Configuração salva!");
+            location.reload();
         }
 
         // --- GOOGLE DRIVE ---
@@ -182,10 +199,20 @@
             if(!googleClientId) return alert("Por favor, insira o Client ID do Google primeiro.");
             
             try {
+                // Usando o novo Google Identity Services Token Client
                 const client = google.accounts.oauth2.initTokenClient({
                     client_id: googleClientId,
                     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
                     callback: (response) => {
+                        if (response.error) {
+                            console.error("Erro Google:", response.error);
+                            if(response.error === "idpiframe_initialization_failed") {
+                                alert("O Google bloqueou a inicialização. Verifique se as Origens JavaScript Autorizadas no Google Cloud incluem este domínio.");
+                            } else {
+                                alert("Erro na autenticação: " + response.error);
+                            }
+                            return;
+                        }
                         if (response.access_token) {
                             googleToken = response.access_token;
                             fetchGoogleProfile(googleToken);
@@ -194,8 +221,8 @@
                 });
                 client.requestAccessToken();
             } catch (err) {
-                console.error("Erro ao iniciar Auth Google:", err);
-                alert("Erro ao conectar. Verifique se o Client ID é válido e se as origens autorizadas estão configuradas no Google Console.");
+                console.error("Erro Fatal:", err);
+                alert("Não foi possível abrir o login do Google. Certifique-se de que as Origens JavaScript Autorizadas estão corretas no Console do Google Cloud.");
             }
         }
 
@@ -230,8 +257,7 @@
                 saves: await getAllFromStore(STORES.SAVES),
                 date: new Date().toISOString()
             };
-            console.log("Simulando envio ao Drive (Backup Cloud Ready):", data);
-            // Aqui seria implementado o upload real via Drive API v3 se necessário persistir como arquivo .json
+            console.log("Simulando Backup para o Google Drive:", data);
         }
 
         function getAllFromStore(storeName) {
