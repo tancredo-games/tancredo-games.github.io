@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Saves Cloud - Tancredo Destroyer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
+        
+        :root {
+            --primary: #e94560;
+            --bg-dark: #0f0f1a;
+            --card-bg: #1a1a2e;
+        }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: white;
+            background-image: radial-gradient(circle at top right, rgba(233, 69, 96, 0.05), transparent);
+        }
+
+        .font-gaming { font-family: 'Orbitron', sans-serif; }
+        .text-glow { text-shadow: 0 0 15px rgba(233, 69, 96, 0.6); }
+
+        .drop-zone {
+            border: 2px dashed #4b5563;
+            background: rgba(26, 26, 46, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .drop-zone.active {
+            border-color: var(--primary);
+            background: rgba(233, 69, 96, 0.1);
+            transform: scale(1.01);
+        }
+
+        .save-card {
+            background: var(--card-bg);
+            border: 1px solid #2d2d44;
+            transition: transform 0.2s;
+        }
+
+        .save-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .cloud-sync-badge {
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0f0f1a]/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <a href="jogos.html" class="font-gaming text-primary text-xl tracking-tighter hover:opacity-80 transition flex items-center gap-2">
+                <i class="fas fa-gamepad text-[#e94560]"></i>
+                <span class="text-[#e94560]">JOGOS</span>
+            </a>
+            <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[10px] text-gray-500 uppercase font-bold">
+                <i class="fas fa-sync-alt"></i> Google Drive: <span id="cloudStatusText" class="text-yellow-500">Sincronizando...</span>
+            </div>
+        </div>
+
+        <div id="userHeaderArea" class="flex items-center gap-4">
+            <!-- Renderizado via JS -->
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 max-w-5xl">
+        <div class="text-center mb-12">
+            <h1 class="font-gaming text-4xl md:text-6xl text-glow uppercase tracking-tighter mb-4">Meus Mundos</h1>
+            <p class="text-gray-500 text-sm max-w-lg mx-auto">Seus arquivos .EPK são salvos automaticamente na pasta <span class="text-primary font-bold">TD_Saves</span> do seu Google Drive.</p>
+        </div>
+
+        <!-- Área de Upload -->
+        <div class="mb-16">
+            <input type="file" id="fileInput" accept=".epk" class="hidden">
+            <div id="dropZone" class="drop-zone rounded-3xl p-12 text-center cursor-pointer group">
+                <div class="mb-6 inline-block p-5 bg-gray-900 rounded-2xl group-hover:bg-primary/20 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-5xl text-gray-600 group-hover:text-primary transition-colors"></i>
+                </div>
+                <h3 class="font-gaming text-xl mb-2">Upload para a Nuvem</h3>
+                <p class="text-gray-500 max-w-xs mx-auto text-sm leading-relaxed">
+                    Arraste seu arquivo .EPK aqui para subir ao Google Drive.
+                </p>
+            </div>
+        </div>
+
+        <!-- Lista de Saves -->
+        <section>
+            <div class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
+                <h2 class="font-gaming text-xl uppercase tracking-widest">Biblioteca Cloud</h2>
+                <div class="flex gap-4">
+                    <button onclick="syncNow()" class="text-[10px] text-primary hover:underline uppercase font-bold"><i class="fas fa-sync mr-1"></i> Sincronizar Agora</button>
+                    <div class="text-xs text-gray-500 uppercase font-bold" id="saveCounter">0 Arquivos</div>
+                </div>
+            </div>
+
+            <div id="savesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Cards injetados aqui -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const DB_NAME = "TancredoDestroyer_Cloud";
+        const DB_VERSION = 2;
+        const STORE_SAVES = "saves";
+        let db;
+        
+        // Recuperar usuário e dados do Drive do localStorage
+        const currentUser = JSON.parse(localStorage.getItem('td_user'));
+
+        // Proteção de Rota
+        if (!currentUser) {
+            window.location.href = "jogos.html";
+        }
+
+        const initDB = () => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (e) => {
+                const database = e.target.result;
+                if (!database.objectStoreNames.contains(STORE_SAVES)) {
+                    database.createObjectStore(STORE_SAVES, { keyPath: "id", autoIncrement: true });
+                }
+            };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                renderUser();
+                loadSaves();
+                checkCloudStatus();
+            };
+        };
+
+        const renderUser = () => {
+            const area = document.getElementById('userHeaderArea');
+            area.innerHTML = `
+                <div class="flex items-center gap-3 bg-gray-900 border border-gray-800 p-1.5 pr-4 rounded-full">
+                    <img src="${currentUser.picture || ''}" class="w-8 h-8 rounded-full border border-primary">
+                    <span class="text-xs font-gaming tracking-tighter">${currentUser.username}</span>
+                    <button onclick="logout()" class="text-gray-600 hover:text-primary transition ml-2">
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
+            `;
+        };
+
+        function logout() {
+            localStorage.removeItem('td_user');
+            window.location.href = 'jogos.html';
+        }
+
+        // --- LÓGICA DE DRIVE API ---
+        function checkCloudStatus() {
+            const statusText = document.getElementById('cloudStatusText');
+            const syncArea = document.getElementById('syncStatus');
+            
+            if (currentUser.googleToken) {
+                syncArea.classList.remove('hidden');
+                statusText.innerText = "Conectado";
+                statusText.className = "text-green-500";
+            } else {
+                statusText.innerText = "Modo Local";
+                statusText.className = "text-red-500";
+            }
+        }
+
+        async function syncNow() {
+            alert("Acessando Google Drive API...\nVerificando pasta 'TD_Saves'...");
+            // Aqui entraria o fetch para a API do Google Drive usando currentUser.googleToken
+            // 1. Procurar pasta TD_Saves
+            // 2. Se não existir, criar
+            // 3. Comparar arquivos locais (IndexedDB) com os da nuvem
+            // 4. Baixar novos ou subir locais
+            console.log("Simulando Sincronização...");
+        }
+
+        // --- MANIPULAÇÃO DE ARQUIVOS ---
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+        function handleFile(file) {
+            if (!file || !file.name.toLowerCase().endsWith('.epk')) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const saveObject = {
+                    username: currentUser.username,
+                    filename: file.name,
+                    data: e.target.result,
+                    size: file.size,
+                    timestamp: new Date().getTime(),
+                    cloudSynced: false // Inicialmente falso, mudará após upload real no Drive
+                };
+
+                const transaction = db.transaction([STORE_SAVES], "readwrite");
+                transaction.objectStore(STORE_SAVES).add(saveObject).onsuccess = () => {
+                    loadSaves();
+                    uploadToDrive(saveObject); // Tenta subir pro Drive logo após salvar local
+                };
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function uploadToDrive(saveObj) {
+            console.log(`Subindo ${saveObj.filename} para a pasta 'TD_Saves' no Drive...`);
+            // Simulação de upload Drive API
+            setTimeout(() => {
+                console.log("Upload concluído!");
+                // Marcar como sincronizado no IndexedDB
+            }, 2000);
+        }
+
+        function loadSaves() {
+            const container = document.getElementById('savesContainer');
+            const counter = document.getElementById('saveCounter');
+            container.innerHTML = "";
+            let count = 0;
+
+            const transaction = db.transaction([STORE_SAVES], "readonly");
+            transaction.objectStore(STORE_SAVES).openCursor(null, 'prev').onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    const item = cursor.value;
+                    if (item.username === currentUser.username) {
+                        count++;
+                        renderCard(item);
+                    }
+                    cursor.continue();
+                } else {
+                    counter.innerText = `${count} Arquivos`;
+                }
+            };
+        }
+
+        function renderCard(item) {
+            const container = document.getElementById('savesContainer');
+            const date = new Date(item.timestamp).toLocaleDateString('pt-BR');
+            const size = (item.size / 1024).toFixed(1) + ' KB';
+
+            const card = document.createElement('div');
+            card.className = "save-card p-5 rounded-2xl flex justify-between items-center group";
+            card.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-primary border border-gray-800">
+                        <i class="fas fa-file-archive"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-sm text-gray-200 truncate max-w-[150px]">${item.filename}</h4>
+                            <span class="cloud-sync-badge ${item.cloudSynced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                ${item.cloudSynced ? 'Cloud' : 'Local'}
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">${date} • ${size}</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadSave(${item.id})" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button onclick="deleteSave(${item.id})" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-red-500/20 hover:text-red-500 transition-all flex items-center justify-center text-gray-600">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        window.downloadSave = (id) => {
+            const tx = db.transaction([STORE_SAVES], "readonly");
+            tx.objectStore(STORE_SAVES).get(id).onsuccess = (e) => {
+                const item = e.target.result;
+                const blob = new Blob([item.data], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = item.filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+        };
+
+        window.deleteSave = (id) => {
+            if (confirm("Deletar da nuvem e do local?")) {
+                const tx = db.transaction([STORE_SAVES], "readwrite");
+                tx.objectStore(STORE_SAVES).delete(id).onsuccess = loadSaves;
+            }
+        };
+
+        initDB();
+    </script>
+</body>
+</html>

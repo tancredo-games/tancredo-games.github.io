@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tancredo Destroyer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .font-gaming {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 15px rgba(233, 69, 96, 0.7);
+        }
+
+        .btn-play {
+            background: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-play:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
+            background: #ff4d6d;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="bg-[#0f0f1a] text-gray-100">
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-[#1a1a2e]/80 backdrop-blur-lg border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="font-gaming text-xl md:text-2xl font-bold tracking-widest text-glow text-[#e94560]">
+                TANCREDO DESTROYER
+            </h1>
+            <nav class="hidden md:flex space-x-8 font-medium">
+                <a href="index.html" class="hover:text-[#e94560] transition">Início</a>
+                <a href="jogos.html" class="hover:text-[#e94560] transition text-[#e94560]">Jogos</a>
+                <a href="saves.html" class="hover:text-[#e94560] transition">Meus Saves</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient px-6">
+        <div class="container mx-auto text-center">
+            <div class="floating mb-8">
+                <i class="fas fa-gamepad text-6xl text-[#e94560] opacity-50"></i>
+            </div>
+            <h2 class="font-gaming text-5xl md:text-8xl font-bold mb-6 text-glow">
+                DOMINE O CAOS
+            </h2>
+            <p class="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+                Feito por: <span class="text-[#e94560] font-bold">Zoomax</span>. <br>
+                O <span class="text-[#e94560]">Tancredo DTR</span> foi criado com o objetivo de descontrair em meio a todo o caos escolar.
+            </p>
+            
+            <div class="flex flex-col items-center gap-6">
+                <!-- Botão principal redirecionando para a biblioteca de jogos -->
+                <a href="jogos.html" class="btn-play text-white px-12 py-5 rounded-full font-gaming text-2xl font-bold transition">
+                    JOGAR AGORA
+                </a>
+                
+                <p class="text-gray-500 text-sm mt-4 uppercase tracking-widest">Clique para fugir da rotina</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rodapé (Footer) -->
+    <footer class="bg-[#0b0b14] border-t border-gray-800 py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 mb-8 font-gaming text-sm tracking-widest">
+                <a href="index.html" class="hover:text-[#e94560] transition duration-300">INÍCIO</a>
+                <a href="jogos.html" class="hover:text-[#e94560] transition duration-300">JOGOS</a>
+                <a href="saves.html" class="hover:text-[#e94560] transition duration-300">SAVES</a>
+            </div>
+            
+            <div class="w-16 h-1 bg-[#e94560] mx-auto mb-8 opacity-30"></div>
+            
+            <p class="text-gray-600 text-xs">
+                &copy; 2024 TANCREDO DESTROYER | DESENVOLVIDO POR <span class="text-gray-400">ZOOMAX</span>
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
