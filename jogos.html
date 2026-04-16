@@ -149,11 +149,12 @@
         const STORES = { GAMES: "games", USERS: "users", SAVES: "saves" };
         const ADMIN_PASS = "qwertyuiop";
         const MASTER_PASS = "qwertyuiop1234567890";
+        const DEFAULT_CLIENT_ID = "479833797508-1mv6n1hbeb03nn2vqmaubqteo258q1kk.apps.googleusercontent.com";
         
         let db;
         let currentUser = JSON.parse(localStorage.getItem('td_session')) || null;
         let googleToken = null;
-        let googleClientId = localStorage.getItem('google_client_id') || "";
+        let googleClientId = localStorage.getItem('google_client_id') || DEFAULT_CLIENT_ID;
 
         // --- DATABASE ---
         const req = indexedDB.open(DB_NAME, 3);
@@ -167,30 +168,35 @@
             db = e.target.result;
             renderGames();
             updateUserUI();
-            if(googleClientId) document.getElementById('googleClientId').value = googleClientId;
+            document.getElementById('googleClientId').value = googleClientId;
         };
 
         function saveGoogleConfig() {
             googleClientId = document.getElementById('googleClientId').value.trim();
             localStorage.setItem('google_client_id', googleClientId);
-            alert("Configuração salva! Você já pode tentar conectar.");
+            alert("Configuração salva!");
         }
 
         // --- GOOGLE DRIVE ---
         function startGoogleAuth() {
-            if(!googleClientId) return alert("Por favor, insira o Client ID do Google primeiro nas configurações acima.");
+            if(!googleClientId) return alert("Por favor, insira o Client ID do Google primeiro.");
             
-            const client = google.accounts.oauth2.initTokenClient({
-                client_id: googleClientId,
-                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                callback: (response) => {
-                    if (response.access_token) {
-                        googleToken = response.access_token;
-                        fetchGoogleProfile(googleToken);
-                    }
-                },
-            });
-            client.requestAccessToken();
+            try {
+                const client = google.accounts.oauth2.initTokenClient({
+                    client_id: googleClientId,
+                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                    callback: (response) => {
+                        if (response.access_token) {
+                            googleToken = response.access_token;
+                            fetchGoogleProfile(googleToken);
+                        }
+                    },
+                });
+                client.requestAccessToken();
+            } catch (err) {
+                console.error("Erro ao iniciar Auth Google:", err);
+                alert("Erro ao conectar. Verifique se o Client ID é válido e se as origens autorizadas estão configuradas no Google Console.");
+            }
         }
 
         async function fetchGoogleProfile(token) {
@@ -224,7 +230,8 @@
                 saves: await getAllFromStore(STORES.SAVES),
                 date: new Date().toISOString()
             };
-            console.log("Sincronizando...", data);
+            console.log("Simulando envio ao Drive (Backup Cloud Ready):", data);
+            // Aqui seria implementado o upload real via Drive API v3 se necessário persistir como arquivo .json
         }
 
         function getAllFromStore(storeName) {
@@ -274,8 +281,10 @@
 
         function setAdminTab(tab) {
             ['add', 'manage', 'users', 'master'].forEach(t => {
-                document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`)?.classList.add('hidden');
-                document.getElementById(`adminTab${t.charAt(0).toUpperCase()+t.slice(1)}`)?.classList.remove('bg-[#e94560]');
+                const el = document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`);
+                const btn = document.getElementById(`adminTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
+                if(el) el.classList.add('hidden');
+                if(btn) btn.classList.remove('bg-[#e94560]');
             });
             document.getElementById(`panel${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.remove('hidden');
             document.getElementById(`adminTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('bg-[#e94560]');
@@ -348,6 +357,9 @@
                 renderGames();
                 autoSaveToCloud();
                 setAdminTab('manage');
+                document.getElementById('gameName').value = '';
+                document.getElementById('gameBanner').value = '';
+                document.getElementById('gameUrl').value = '';
             };
         }
 
