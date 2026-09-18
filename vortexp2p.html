@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex P2P - Secure Communications</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        vortex: {
+                            light: '#00f2fe',
+                            DEFAULT: '#4facfe',
+                            dark: '#0f6baf',
+                            glass: 'rgba(20, 25, 35, 0.65)'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                        'pulse-glow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome para Ícones UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PeerJS para Sinalização P2P (Substitui o Firebase) -->
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            transition: background-color 0.3s, color 0.3s;
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        /* Dynamic Background & Glass */
+        #app-wrapper {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-image: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+
+        .glass-panel { 
+            background: var(--tw-colors-vortex-glass, rgba(15, 23, 42, 0.7));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .light .glass-panel { 
+            background: rgba(255, 255, 255, 0.7); 
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .modal-overlay { 
+            background: rgba(0, 0, 0, 0.8); 
+            backdrop-filter: blur(8px); 
+        }
+
+        /* Vortex Logo SVG styling */
+        .vortex-logo path { stroke-dasharray: 100; animation: dash 5s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: 200; } }
+    </style>
+</head>
+<body class="text-gray-900 dark:text-gray-100 h-screen w-screen select-none">
+
+    <div id="app-wrapper" class="h-full w-full flex flex-col relative z-0">
+        
+        <!-- Tela de Login / Seleção de Contas -->
+        <div id="login-screen" class="absolute inset-0 z-50 flex items-center justify-center modal-overlay">
+            <div class="glass-panel p-8 rounded-2xl w-full max-w-md transition-all relative overflow-y-auto max-h-[95vh]">
+                <!-- Decorative Blob -->
+                <div class="absolute -top-16 -right-16 w-32 h-32 bg-vortex rounded-full blur-3xl opacity-30"></div>
+                
+                <div class="text-center mb-8 relative z-10">
+                    <div class="flex justify-center mb-4">
+                        <!-- Custom Vortex Logo -->
+                        <svg viewBox="0 0 100 100" class="w-20 h-20 vortex-logo animate-spin-slow">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#4facfe;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad1)" stroke-width="4" stroke-dasharray="15 10"/>
+                            <circle cx="50" cy="50" r="25" fill="url(#grad1)" class="opacity-80"/>
+                            <path d="M50 15 L50 85 M15 50 L85 50" stroke="#fff" stroke-width="2" class="opacity-50"/>
+                            <circle cx="50" cy="50" r="10" fill="#fff"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">VORTEX</h1>
+                    <p class="text-sm text-gray-300 mt-1 font-light">E2EE Decentralized Network</p>
+                </div>
+                
+                <div class="space-y-3 mb-5 relative z-10">
+                    <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Entrar na conta online</h3>
+                    <input id="cloud-login-name" autocomplete="username" placeholder="Usuário ou email" class="w-full bg-black/20 border border-gray-600/50 text-white rounded-lg p-3 outline-none focus:border-vortex">
+                    <input id="cloud-login-pass" type="password" autocomplete="current-password" placeholder="Senha" onkeydown="if(event.key==='Enter')loginCloudAccount()" class="w-full bg-black/20 border border-gray-600/50 text-white rounded-lg p-3 outline-none focus:border-vortex">
+                    <button onclick="loginCloudAccount()" class="w-full bg-vortex-dark hover:bg-vortex text-white font-bold py-3 rounded-lg">Entrar online</button>
+                    <p class="text-xs text-gray-400">Contas antigas continuam disponíveis abaixo, neste dispositivo.</p>
+                </div>
+                <div id="account-list" class="space-y-3 mb-6 max-h-48 overflow-y-auto pr-2 relative z-10">
+                    <!-- Contas locais injetadas via JS -->
+                </div>
+
+                <div class="border-t border-gray-600/50 pt-6 relative z-10">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Criar conta online</h3>
+                    <input type="text" id="new-account-name" placeholder="Nome de Usuário" class="w-full bg-black/20 border border-gray-600/50 text-white rounded-lg p-3 mb-3 outline-none focus:border-vortex transition-colors">
+                    <input type="email" id="new-account-email" autocomplete="email" placeholder="Email" class="w-full bg-black/20 border border-gray-600/50 text-white rounded-lg p-3 mb-3 outline-none focus:border-vortex">
+                    <input type="password" id="new-account-pass" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Senha (12–128 caracteres)" class="w-full bg-black/20 border border-gray-600/50 text-white rounded-lg p-3 mb-3 outline-none focus:border-vortex transition-colors">
+                    <button onclick="createNewAccount()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 transition-all transform hover:scale-[1.02]">
+                        Criar Conta Online
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layout Principal do App (Escondido inicialmente) -->
+        <div id="main-app" class="h-full w-full flex flex-col hidden relative z-10">
+            
+            <!-- Top Navigation Bar -->
+            <div class="h-16 glass-panel border-b-0 rounded-none border-b border-white/10 flex items-center justify-between px-6 shrink-0 z-20">
+                
+                <!-- Left: Logo & Status -->
+                <div class="flex items-center space-x-4">
+                    <svg viewBox="0 0 100 100" class="w-10 h-10 animate-spin-slow">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#00f2fe" stroke-width="6" stroke-dasharray="15 10"/>
+                        <circle cx="50" cy="50" r="15" fill="#4facfe"/>
+                    </svg>
+                    <div>
+                        <h2 class="font-bold text-xl tracking-wide">VORTEX</h2>
+                        <div class="flex items-center text-xs text-cyan-400">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 mr-2 animate-pulse-glow"></span>
+                            <span id="network-status">Conectando…</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: View Switcher (Friends vs Spaces) -->
+                <div class="flex bg-black/20 rounded-full p-1 border border-white/5">
+                    <button onclick="switchMainView('friends')" id="btn-view-friends" class="px-6 py-2 rounded-full bg-white/10 text-white text-sm font-semibold transition-all">Conexões</button>
+                    <button onclick="switchMainView('spaces')" id="btn-view-spaces" class="px-6 py-2 rounded-full text-gray-400 hover:text-white text-sm font-semibold transition-all">Espaços (Servidores)</button>
+                </div>
+
+                <!-- Right: User Controls -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex space-x-1 bg-black/20 rounded-lg p-1 border border-white/5 mr-4">
+                        <button onclick="toggleMic()" id="btn-mic" class="w-10 h-10 rounded-md text-gray-300 hover:bg-white/10 hover:text-white transition-colors" title="Microfone"><i class="fas fa-microphone"></i></button>
+                        <button onclick="toggleDeafen()" id="btn-deaf" class="w-10 h-10 rounded-md text-gray-300 hover:bg-white/10 hover:text-white transition-colors" title="Headset"><i class="fas fa-headphones"></i></button>
+                        <button onclick="openModal('settingsModal')" class="w-10 h-10 rounded-md text-gray-300 hover:bg-white/10 hover:text-white transition-colors" title="Configurações"><i class="fas fa-sliders-h"></i></button>
+                    </div>
+                    <div class="flex items-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors border border-transparent hover:border-white/10" onclick="openModal('settingsModal')">
+                        <div class="text-right mr-3 hidden md:block">
+                            <div id="my-username" class="text-sm font-bold text-white">User</div>
+                            <div class="text-[10px] text-gray-400 font-mono" id="my-code-display">#00000000</div>
+                        </div>
+                        <img id="my-avatar" src="https://placehold.co/100x100/1e1b4b/00f2fe?text=U" class="w-10 h-10 rounded-full object-cover border-2 border-cyan-500 shadow-[0_0_10px_rgba(0,242,254,0.3)]">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area (Below Top Bar) -->
+            <div class="flex-1 flex overflow-hidden">
+                
+                <!-- Left Sidebar (Connections / Spaces List) -->
+                <div class="w-72 glass-panel border-r-0 border-t-0 rounded-none border-r border-white/10 flex flex-col z-10">
+                    
+                    <!-- Friends View -->
+                    <div id="sidebar-friends" class="flex flex-col h-full">
+                        <div class="p-4 border-b border-white/5">
+                            <button onclick="openModal('addFriendModal')" class="w-full bg-white/5 hover:bg-white/10 border border-cyan-500/30 hover:border-cyan-500 text-cyan-400 rounded-lg py-2 text-sm font-semibold transition-all flex items-center justify-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Nova Conexão <span id="pending-badge" class="ml-2 text-xs"></span>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-3 space-y-2" id="friends-list">
+                            <!-- Injetado via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Spaces View (Hidden default) -->
+                    <div id="sidebar-spaces" class="flex flex-col h-full hidden">
+                        <div class="p-4 border-b border-white/5">
+                            <button onclick="openModal('createSpaceModal')" class="w-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/40 hover:to-pink-500/40 border border-purple-500/30 text-purple-300 rounded-lg py-2 text-sm font-semibold transition-all flex items-center justify-center">
+                                <i class="fas fa-circle-nodes mr-2"></i> Criar Espaço
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-3 space-y-2" id="spaces-list">
+                            <!-- Injetado via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Area: Chat & Media -->
+                <div class="flex-1 flex flex-col relative bg-black/20">
+                    
+                    <!-- Chat Header -->
+                    <div class="h-14 glass-panel border-b-0 border-t-0 border-x-0 border-b border-white/5 flex items-center px-6 justify-between shrink-0" id="chat-header" style="opacity: 0;">
+                        <div class="flex items-center">
+                            <i class="fas fa-lock text-green-400 mr-3 text-sm" title="E2EE P2P Ativo"></i>
+                            <h3 class="font-bold text-lg text-white" id="chat-title">Nome</h3>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="startVoiceCall()" id="btn-call-voice" class="w-10 h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-cyan-400 transition-all" title="Chamada de Voz"><i class="fas fa-phone-alt"></i></button>
+                            <button onclick="startVideoCall()" id="btn-call-video" class="w-10 h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-cyan-400 transition-all" title="Chamada de Vídeo"><i class="fas fa-video"></i></button>
+                            <button onclick="startScreenShare()" id="btn-call-screen" class="w-10 h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-cyan-400 transition-all" title="Compartilhar Tela"><i class="fas fa-desktop"></i></button>
+                            <button onclick="endCall()" id="btn-end-call" class="hidden w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all animate-pulse" title="Encerrar Chamada"><i class="fas fa-phone-slash"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Welcome Screen (Shown when no chat selected) -->
+                    <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center z-0 text-center p-8 pointer-events-none">
+                        <svg viewBox="0 0 100 100" class="w-32 h-32 opacity-20 mb-6">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 5"/>
+                            <path d="M50 20 L50 80 M20 50 L80 50" stroke="#fff" stroke-width="1" class="opacity-30"/>
+                        </svg>
+                        <h2 class="text-3xl font-bold text-white/50 mb-2">Vortex Network</h2>
+                        <p class="text-gray-500 max-w-md">Selecione uma conexão para iniciar uma comunicação criptografada ponta-a-ponta. Mensagens offline ficam temporariamente criptografadas na caixa postal.</p>
+                    </div>
+
+                    <!-- Bolinha de Chamada de Voz (sem vídeo) -->
+                    <div id="voice-call-area" class="hidden flex-col items-center justify-center py-8 bg-black/40 border-b border-white/5 relative z-10 shrink-0">
+                        <div class="relative flex items-center justify-center w-28 h-28">
+                            <div class="absolute inset-0 rounded-full bg-vortex/30 animate-ping"></div>
+                            <img id="voice-call-avatar" src="https://placehold.co/150x150/1e1b4b/00f2fe?text=U" class="w-24 h-24 rounded-full object-cover border-4 border-vortex shadow-[0_0_25px_rgba(0,242,254,0.5)] relative z-10">
+                        </div>
+                        <h4 id="voice-call-name" class="mt-4 text-lg font-bold text-white">Conexão</h4>
+                        <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-phone-alt mr-1 animate-pulse"></i> Chamada de voz em andamento...</p>
+                    </div>
+
+                    <!-- Media Grid (Video Calls) -->
+                    <div id="video-area" class="bg-black/80 flex-1 p-4 grid grid-cols-2 gap-4 hidden max-h-[40vh] border-b border-white/5 shadow-inner relative z-10">
+                        <div class="relative rounded-xl overflow-hidden bg-gray-900 border border-white/10 flex items-center justify-center shadow-lg">
+                            <video id="local-video" autoplay muted class="w-full h-full object-cover"></video>
+                            <div class="absolute bottom-3 left-3 glass-panel px-3 py-1 rounded-full text-xs font-bold text-white">Você</div>
+                        </div>
+                        <div class="relative rounded-xl overflow-hidden bg-gray-900 border border-white/10 flex items-center justify-center shadow-lg">
+                            <video id="remote-video" autoplay class="w-full h-full object-cover"></video>
+                            <div class="absolute bottom-3 left-3 glass-panel px-3 py-1 rounded-full text-xs font-bold text-white" id="remote-video-name">Conexão</div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Log -->
+                    <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-6 relative z-10 hidden">
+                        <!-- Mensagens injetadas via JS -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-4 glass-panel border-t-0 border-x-0 border-b-0 shrink-0 relative z-10 hidden" id="message-input-area">
+                        <div class="bg-black/30 border border-white/10 rounded-xl p-2 flex items-center">
+                            <button class="p-3 text-gray-400 hover:text-vortex transition-colors" title="Soundboard P2P" onclick="openModal('soundboardModal')"><i class="fas fa-music"></i></button>
+                            <button class="p-3 text-gray-400 hover:text-vortex transition-colors" title="Enviar GIF" onclick="openModal('gifModal')"><i class="fas fa-photo-video"></i></button>
+                            
+                            <input type="text" id="chat-input" placeholder="Enviar mensagem via túnel E2EE..." class="flex-1 bg-transparent border-none outline-none px-4 text-white placeholder-gray-500 font-light" onkeypress="handleChatInput(event)">
+                            
+                            <button onclick="sendMessage()" class="p-3 bg-vortex-dark hover:bg-vortex text-white rounded-lg transition-colors shadow-lg"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Context / Profile -->
+                <div id="right-panel" class="w-80 glass-panel border-l-0 border-t-0 rounded-none border-l border-white/10 hidden flex-col z-10 overflow-hidden">
+                    <div id="friend-profile-content" class="h-full overflow-y-auto">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="incomingCallModal" role="dialog" aria-modal="true" aria-labelledby="incoming-call-title" class="fixed inset-0 modal-overlay z-[110] hidden flex items-center justify-center">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-8 border border-white/20 text-center">
+            <h3 id="incoming-call-title" class="text-xl font-bold text-white">Chamada recebida</h3>
+            <p id="incoming-call-name" class="my-6 text-gray-300"></p>
+            <div class="flex gap-4">
+                <button id="accept-call" onclick="acceptIncomingCall()" class="flex-1 bg-green-600 hover:bg-green-500 text-white rounded-xl py-3 font-bold">Atender</button>
+                <button onclick="rejectIncomingCall()" class="flex-1 bg-red-600 hover:bg-red-500 text-white rounded-xl py-3 font-bold">Recusar</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Adicionar Conexão -->
+    <div id="addFriendModal" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center">
+        <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl p-8 relative border border-white/20">
+            <button onclick="closeModal('addFriendModal')" class="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-2 text-white"><i class="fas fa-satellite-dish text-vortex mr-2"></i> Conectar ao Nó</h2>
+            <p class="text-sm text-gray-400 mb-8 font-light">Insira o código público da outra pessoa e aguarde a aceitação na aba Pendentes.</p>
+            
+            <div class="flex bg-black/20 rounded-xl p-1 mb-5" role="tablist" aria-label="Conexões">
+                <button id="connection-tab-add" role="tab" aria-selected="true" aria-controls="connection-add" onclick="switchConnectionTab('add')" class="flex-1 py-2 rounded-lg bg-white/10 text-white">Adicionar</button>
+                <button id="connection-tab-pending" role="tab" aria-selected="false" aria-controls="connection-pending" onclick="switchConnectionTab('pending')" class="flex-1 py-2 rounded-lg text-gray-400">Pendentes <span id="pending-count"></span></button>
+            </div>
+            <div id="connection-add" role="tabpanel" aria-labelledby="connection-tab-add">
+            <div class="mb-6 bg-black/20 p-4 rounded-xl border border-white/5">
+                <label class="block text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2">Seu Código Público</label>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="my-daily-code" readonly class="w-full bg-transparent font-mono text-2xl text-center tracking-[0.2em] text-white outline-none cursor-default">
+                    <button onclick="copyMyCode()" class="bg-white/10 hover:bg-white/20 text-white p-3 rounded-lg transition-colors border border-white/10"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Conectar a (Código)</label>
+                <input type="text" id="friend-code-input" placeholder="Ex: 12345678" maxlength="8" class="w-full bg-black/30 border border-white/10 text-white rounded-xl p-4 font-mono text-2xl text-center tracking-[0.2em] outline-none focus:border-vortex transition-colors mb-4 placeholder-gray-600">
+                <button onclick="addFriendByCode()" id="btn-connect-peer" class="w-full bg-vortex hover:bg-cyan-400 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,254,0.4)]">Enviar solicitação de amizade</button>
+            </div>
+            
+            <div id="add-friend-status" class="mt-4 text-center text-sm font-semibold h-5"></div>
+            </div>
+            <div id="connection-pending" class="hidden" role="tabpanel" aria-labelledby="connection-tab-pending">
+                <div id="friend-requests" class="space-y-3 max-h-72 overflow-y-auto" aria-live="polite"></div>
+            </div>
+            <p id="mailbox-status" class="mt-3 text-xs text-gray-400" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <!-- Modal: Configurações Gerais -->
+    <div id="settingsModal" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center">
+        <div class="glass-panel w-full max-w-4xl h-5/6 rounded-2xl shadow-2xl flex overflow-hidden relative border border-white/20">
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-6 text-gray-400 hover:text-white z-50 text-2xl transition-colors"><i class="fas fa-times-circle"></i></button>
+            
+            <!-- Config Sidebar -->
+            <div class="w-1/3 bg-black/20 flex flex-col p-4 border-r border-white/10">
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-2">Configurações Locais</div>
+                <button class="text-left px-4 py-3 rounded-lg bg-white/10 text-white font-semibold mb-2 shadow-inner" id="tab-btn-profile" onclick="switchSettingTab('profile')">Perfil e Personalização</button>
+                <button class="text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-gray-200 mb-2 transition-colors" id="tab-btn-audio" onclick="switchSettingTab('audio')">Voz, Áudio & Modificador</button>
+                <button class="text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-gray-200 mb-2 transition-colors" id="tab-btn-appearance" onclick="switchSettingTab('appearance')">Aparência do App</button>
+                
+                <div class="mt-auto pt-4 border-t border-white/10">
+                    <button onclick="logout()" class="text-left px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400 w-full flex items-center transition-colors"><i class="fas fa-power-off mr-3"></i> Desconectar Nó (Trocar Conta)</button>
+                </div>
+            </div>
+            
+            <!-- Config Content -->
+            <div class="w-2/3 p-8 overflow-y-auto relative custom-scrollbar text-white" id="settings-content">
+                
+                <!-- Tab: Perfil -->
+                <div id="tab-profile">
+                    <h2 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Meu Cartão de Identidade</h2>
+                    
+                    <!-- Preview Card -->
+                    <div class="glass-panel rounded-xl overflow-hidden border border-white/10 relative mb-8 shadow-2xl max-w-sm mx-auto">
+                        <div id="preview-banner" class="h-32 bg-gradient-to-r from-cyan-600 to-blue-900 w-full bg-cover bg-center"></div>
+                        <div class="p-5 relative">
+                            <img id="preview-avatar" src="https://placehold.co/100x100/1e1b4b/00f2fe?text=U" class="w-24 h-24 rounded-xl object-cover absolute -top-12 left-5 border-4 border-[#141923] shadow-lg">
+                            
+                            <div class="mt-12">
+                                <h3 id="preview-name" class="text-2xl font-extrabold tracking-tight">User</h3>
+                            </div>
+                            
+                            <!-- Badges Area Preview -->
+                            <div id="preview-badges" class="flex space-x-2 mt-3">
+                                <!-- Preenchido dinamicamente se houver insignias -->
+                            </div>
+
+                            <div class="mt-4 p-3 bg-black/30 rounded-lg border border-white/5">
+                                <h4 class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1">Status / Bio</h4>
+                                <p id="preview-bio" class="text-sm text-gray-300 font-light">Explorando a rede Vortex.</p>
+                            </div>
+                            
+                            <div class="mt-3 p-3 bg-black/30 rounded-lg border border-white/5 text-sm font-light text-gray-300">
+                                <p><i class="fas fa-heart text-pink-500 w-5"></i> Fav: <span id="preview-game-fav" class="font-semibold text-white">Nenhum</span></p>
+                                <p class="mt-1"><i class="fas fa-gamepad text-vortex w-5"></i> Agora: <span id="preview-game-playing" class="font-semibold text-white">Nenhum</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div class="bg-black/20 border border-white/10 rounded-xl p-4 space-y-3">
+                            <p id="account-status" class="text-xs text-gray-400"></p>
+                            <div id="cloud-account-controls" class="hidden space-y-2">
+                                <label for="new-permanent-code" class="block text-xs text-cyan-400">Código público permanente</label>
+                                <div class="flex gap-2"><input id="new-permanent-code" maxlength="12" class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg p-2 font-mono" placeholder="VTX-XXXXXXXX"><button onclick="changePermanentCode()" class="bg-white/10 rounded-lg px-3">Alterar</button></div>
+                                <p class="text-xs text-gray-400">Após uma alteração, aguarde 60 dias para alterar novamente. Códigos antigos ficam reservados.</p>
+                            </div>
+                            <p id="identity-status" class="text-xs text-gray-400"></p>
+                            <input id="identity-backup-pass" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Senha do arquivo de identidade (mín. 12 caracteres)" class="w-full bg-black/30 border border-white/10 rounded-lg p-2 text-sm">
+                            <div class="flex gap-2 text-sm"><button onclick="exportIdentity()" class="bg-white/10 rounded-lg px-3 py-2">Exportar identidade</button><button onclick="document.getElementById('identity-file').click()" class="bg-white/10 rounded-lg px-3 py-2">Importar identidade</button></div>
+                            <input id="identity-file" type="file" accept="application/json,.json" class="hidden" onchange="importIdentity(event)">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Codinome</label>
+                            <input type="text" id="set-username" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none focus:border-vortex text-white transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Bio / Transmissão</label>
+                            <textarea id="set-bio" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none resize-none h-20 focus:border-vortex text-white transition-colors"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL Avatar</label>
+                                <input type="text" id="set-avatar" placeholder="https://..." class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none focus:border-vortex text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL Banner</label>
+                                <input type="text" id="set-banner" placeholder="https://..." class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none focus:border-vortex text-white">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Jogo Favorito</label>
+                                <input type="text" id="set-game-fav" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none focus:border-vortex text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Jogando Agora</label>
+                                <input type="text" id="set-game-playing" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 outline-none focus:border-vortex text-white">
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-white/10 pt-5 mt-5">
+                            <h3 class="text-sm font-bold text-vortex uppercase tracking-widest mb-3"><i class="fas fa-medal mr-2"></i> Adicionar Insígnia (Badge)</h3>
+                            <p class="text-xs text-gray-400 font-light mb-3">Insira dados de um Espaço (Servidor) para exibir uma insígnia conquistada. Ao clicar, seus contatos poderão solicitar entrada no espaço.</p>
+                            <div class="flex space-x-2">
+                                <input type="text" id="set-badge-name" placeholder="Nome (Ex: Veterano 100h)" class="flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-sm outline-none">
+                                <input type="text" id="set-badge-icon" placeholder="Ícone FontAwesome (Ex: fa-star)" class="flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-sm outline-none">
+                                <input type="text" id="set-badge-code" placeholder="Código Espaço" class="flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-sm outline-none">
+                                <button onclick="addBadge()" class="bg-white/10 hover:bg-white/20 px-4 rounded-lg text-sm font-bold border border-white/10">+</button>
+                            </div>
+                            <div id="badge-list-edit" class="flex flex-wrap gap-2 mt-3"></div>
+                        </div>
+
+                        <button onclick="saveProfile()" class="w-full mt-6 bg-vortex hover:bg-cyan-400 text-white font-bold py-3 rounded-lg shadow-lg shadow-cyan-500/20 transition-colors">Gravar e Sincronizar na Rede</button>
+                    </div>
+                </div>
+
+                <!-- Tab: Voz e Audio -->
+                <div id="tab-audio" class="hidden">
+                    <h2 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Módulo de Áudio</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-black/20 p-5 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Entrada (Microfone)</label>
+                            <select id="audio-input-select" class="w-full bg-black/50 border border-white/10 rounded-lg p-3 outline-none text-white appearance-none cursor-pointer">
+                                <option value="default">Dispositivo Padrão do Sistema</option>
+                            </select>
+                        </div>
+                        <div class="bg-black/20 p-5 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Saída (Headset)</label>
+                            <select id="audio-output-select" class="w-full bg-black/50 border border-white/10 rounded-lg p-3 outline-none text-white appearance-none cursor-pointer">
+                                <option value="default">Dispositivo Padrão do Sistema</option>
+                            </select>
+                            <p class="text-[10px] text-gray-500 mt-2 font-light">* Suporte a roteamento de saída depende do navegador.</p>
+                        </div>
+                        
+                        <div class="border-t border-white/10 pt-6">
+                            <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-wave-square text-vortex mr-3"></i> Processador DSP Local (Filtro de Voz)</h3>
+                            <p class="text-sm text-gray-400 font-light mb-4">Processado localmente no seu dispositivo via Web Audio API antes da transmissão E2EE.</p>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="setVoiceMod('none')" id="mod-none" class="bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-xl text-center transition-all">
+                                    <i class="fas fa-user mb-2 text-xl block text-gray-400"></i> Puro (Bypass)
+                                </button>
+                                <button onclick="setVoiceMod('radio')" id="mod-radio" class="bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-xl text-center transition-all">
+                                    <i class="fas fa-walkie-talkie mb-2 text-xl block text-yellow-500"></i> Comunicação Tática
+                                </button>
+                                <button onclick="setVoiceMod('deep')" id="mod-deep" class="bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-xl text-center transition-all">
+                                    <i class="fas fa-mask mb-2 text-xl block text-purple-500"></i> Anônimo Grave
+                                </button>
+                                <button onclick="setVoiceMod('alien')" id="mod-alien" class="bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-xl text-center transition-all">
+                                    <i class="fas fa-robot mb-2 text-xl block text-green-500"></i> Modulador Ring
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Aparência -->
+                <div id="tab-appearance" class="hidden">
+                    <h2 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Interface Vortex</h2>
+                    <div class="space-y-6">
+                        <div class="bg-black/20 p-5 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Esquema de Cores</label>
+                            <div class="flex space-x-6">
+                                <label class="flex items-center space-x-3 cursor-pointer group">
+                                    <div class="w-5 h-5 rounded-full border-2 border-vortex flex items-center justify-center">
+                                        <div class="w-3 h-3 rounded-full bg-vortex"></div>
+                                    </div>
+                                    <input type="radio" name="theme" value="dark" class="hidden" checked> 
+                                    <span class="group-hover:text-white transition-colors">Modo Escuro (Padrão)</span>
+                                </label>
+                                <!-- Light mode disabled in logic for UI consistency in this specific neon design, but kept struct for expansion -->
+                            </div>
+                        </div>
+                        <div class="bg-black/20 p-5 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Plano de Fundo (Wallpaper App)</label>
+                            <input type="text" id="app-bg-url" placeholder="URL da imagem (Deixe vazio para o padrão do vórtex)" class="w-full bg-black/50 border border-white/10 rounded-lg p-3 outline-none text-white mb-3 focus:border-vortex">
+                            <button onclick="setAppBackground()" class="bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold px-6 py-2 rounded-lg transition-colors">Aplicar Fundo</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Custom Alert -->
+    <div id="customAlertModal" class="fixed inset-0 modal-overlay z-[220] hidden flex items-center justify-center">
+        <div class="glass-panel p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-white/20">
+            <div class="w-16 h-16 bg-vortex/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-vortex/50">
+                <i class="fas fa-info-circle text-vortex text-3xl"></i>
+            </div>
+            <h3 id="alert-title" class="text-xl font-bold mb-2 text-white">Aviso</h3>
+            <p id="alert-message" class="text-gray-300 font-light mb-6"></p>
+            <button onclick="closeModal('customAlertModal')" class="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-8 py-2 rounded-lg font-bold transition-colors">OK</button>
+        </div>
+    </div>
+
+    <!-- Modal: Senha para Entrar -->
+    <div id="passwordModal" class="fixed inset-0 modal-overlay z-[200] hidden flex items-center justify-center">
+        <div class="glass-panel p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-white/20">
+            <div class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/50">
+                <i class="fas fa-lock text-cyan-400 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-white">Autenticar Conta</h3>
+            <p id="pass-modal-username" class="text-xs text-cyan-400 mb-4 font-mono"></p>
+            <input type="password" id="login-password-input" placeholder="Digite sua senha" class="w-full bg-black/40 border border-white/10 text-white rounded-lg p-3 mb-4 outline-none focus:border-vortex text-center">
+            <div class="flex space-x-2">
+                <button onclick="closeModal('passwordModal')" class="w-1/2 bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg font-semibold transition-colors">Cancelar</button>
+                <button onclick="verifyAndLogin()" class="w-1/2 bg-vortex hover:bg-cyan-400 text-white py-2 rounded-lg font-bold transition-colors">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Soundboard P2P -->
+    <div id="soundboardModal" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center">
+        <div class="glass-panel p-6 rounded-2xl shadow-2xl w-full max-w-md relative border border-white/20">
+            <button onclick="closeModal('soundboardModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <h2 class="text-xl font-bold mb-2 text-white"><i class="fas fa-music text-vortex mr-2"></i> Soundboard E2EE</h2>
+            <p class="text-xs text-gray-400 mb-6 font-light">Dispara osciladores locais na máquina do receptor via túnel de dados.</p>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="playSoundboard('ping')" class="bg-black/30 border border-white/10 p-5 rounded-xl hover:bg-vortex hover:border-vortex transition-all shadow text-center group">
+                    <i class="fas fa-bell mb-3 text-2xl text-cyan-400 group-hover:text-white transition-colors block"></i><span class="text-xs font-bold text-gray-300 group-hover:text-white">Aviso (Ping)</span>
+                </button>
+                <button onclick="playSoundboard('alert')" class="bg-black/30 border border-white/10 p-5 rounded-xl hover:bg-red-500/80 hover:border-red-500 transition-all shadow text-center group">
+                    <i class="fas fa-exclamation-triangle mb-3 text-2xl text-red-400 group-hover:text-white transition-colors block"></i><span class="text-xs font-bold text-gray-300 group-hover:text-white">Alerta</span>
+                </button>
+                <button onclick="playSoundboard('buzz')" class="bg-black/30 border border-white/10 p-5 rounded-xl hover:bg-purple-500/80 hover:border-purple-500 transition-all shadow text-center group">
+                    <i class="fas fa-bolt mb-3 text-2xl text-purple-400 group-hover:text-white transition-colors block"></i><span class="text-xs font-bold text-gray-300 group-hover:text-white">Buzzer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tenor GIF Mock -->
+    <div id="gifModal" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center">
+        <div class="glass-panel p-5 rounded-2xl shadow-2xl w-full max-w-md relative border border-white/20">
+            <button onclick="closeModal('gifModal')" class="absolute top-3 right-3 text-gray-400 hover:text-white bg-black/50 w-8 h-8 rounded-full flex items-center justify-center z-10"><i class="fas fa-times"></i></button>
+            <div class="flex items-center mb-4">
+                <i class="fas fa-bolt text-yellow-400 mr-2 text-xl"></i>
+                <h2 class="font-bold text-white tracking-wide">Módulo de GIFs</h2>
+            </div>
+            <input type="text" placeholder="Pesquisar (Mock)..." class="w-full bg-black/40 border border-white/10 text-white rounded-lg p-3 mb-4 outline-none text-sm focus:border-vortex">
+            <div class="grid grid-cols-2 gap-3 h-64 overflow-y-auto custom-scrollbar pr-2">
+                <!-- Using safe static placeholders for gifs -->
+                <img src="https://media.giphy.com/media/l41lFw057lAJQMwg0/giphy.gif" onclick="sendGIF(this.src)" class="w-full h-28 object-cover rounded-xl cursor-pointer hover:ring-2 hover:ring-vortex transition-all shadow-md">
+                <img src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" onclick="sendGIF(this.src)" class="w-full h-28 object-cover rounded-xl cursor-pointer hover:ring-2 hover:ring-vortex transition-all shadow-md">
+                <img src="https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif" onclick="sendGIF(this.src)" class="w-full h-28 object-cover rounded-xl cursor-pointer hover:ring-2 hover:ring-vortex transition-all shadow-md">
+                <img src="https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif" onclick="sendGIF(this.src)" class="w-full h-28 object-cover rounded-xl cursor-pointer hover:ring-2 hover:ring-vortex transition-all shadow-md">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Criar/Entrar Espaço (Servidor Mock) -->
+    <div id="createSpaceModal" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-md relative text-center border border-white/20">
+            <button onclick="closeModal('createSpaceModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg rotate-3">
+                <i class="fas fa-circle-nodes text-white text-3xl -rotate-3"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white">Criar um Espaço Vortex</h2>
+            <p class="text-xs text-gray-400 mb-6 font-light">Espaços são instâncias lógicas onde você pode atribuir insígnias (Badges). Nesta versão, operam como links P2P simbólicos.</p>
+            
+            <input type="text" id="new-space-name" placeholder="Nome do Espaço (Ex: Base Alpha)" class="w-full bg-black/40 border border-white/10 text-white rounded-xl p-4 mb-4 outline-none focus:border-purple-500">
+            <button onclick="createSpace()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] mb-6">Inicializar Instância</button>
+            
+            <div class="relative flex py-2 items-center mb-6">
+                <div class="flex-grow border-t border-white/10"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-500 text-xs uppercase tracking-widest font-bold">Ou acessar via Insígnia</span>
+                <div class="flex-grow border-t border-white/10"></div>
+            </div>
+            
+            <input type="text" id="join-space-code" placeholder="Hash do Espaço (Ex: VX-123)" class="w-full bg-black/40 border border-white/10 text-white rounded-xl p-4 mb-3 outline-none text-center tracking-widest font-mono text-sm">
+            <button onclick="joinSpace()" class="w-full bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-3 rounded-xl transition-colors">Solicitar Acesso</button>
+        </div>
+    </div>
+
+    <script>
+        // Global App State
+        window.appState = {
+            accounts: JSON.parse(localStorage.getItem('vortex_accounts')) || [],
+            currentUser: null,
+            dailyCode: null,
+            activeChatId: null,
+            activeCallCode: null, // código do peer com quem há uma chamada em andamento
+            peer: null, // PeerJS instance
+            connections: {}, // PeerJS DataConnections
+            calls: {}, // PeerJS MediaCalls
+            localStream: null,
+            voiceModType: 'none',
+            isMuted: false,
+            isDeafened: false,
+            pendingLoginId: null
+        };
+
+        let audioCtx;
+
+        // Cloud credentials live only in this tab's memory, never in the public profile.
+        let cloudSession = null;
+        let cloudAuthBusy = false;
+        const isCloudAccount = () => !!window.appState.currentUser?.cloudUserId;
+        const usableConnection = conn => !!conn?.open && (!isCloudAccount() || conn.authenticated === true);
+        const validPeerCode = code => isCloudAccount() ? validUUID(code) && isFriend(code) : /^\d{8}$/.test(code);
+        const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="#1e1b4b"/><circle cx="50" cy="36" r="18" fill="#4facfe"/><path d="M18 94v-12a32 32 0 0164 0v12" fill="#4facfe"/></svg>');
+        function displayedProfile(profile, code = window.appState.activeChatId) {
+            return usableConnection(window.appState.connections[code]) ? profile : {...profile, avatar: '', banner: ''};
+        }
+        async function cloudFetch(path, options = {}, session = cloudSession) {
+            const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15000);
+            const headers = {'Content-Type': 'application/json', ...(options.headers || {})};
+            if (session?.token) headers.Authorization = 'Bearer ' + session.token;
+            const abort = () => controller.abort(); session?.controller.signal.addEventListener('abort', abort, {once: true});
+            try {
+                if (session?.controller.signal.aborted) throw new Error('Sessão encerrada.');
+                const response = await fetch(VORTEX_MAILBOX_URL + path, {...options, headers, credentials: 'omit', redirect: 'error', cache: 'no-store', signal: controller.signal});
+                let data;
+                try { data = await response.json(); } catch { throw new Error('O Worker retornou uma resposta inválida.'); }
+                if (!response.ok || !data || data.ok !== true) {
+                    const error = new Error(data?.error || 'Serviço indisponível.'); error.status = response.status;
+                    if (data?.retry_after) error.message += ' Faltam aproximadamente ' + Math.ceil(data.retry_after / 86400) + ' dia(s).';
+                    if (response.status === 401 && session === cloudSession && window.appState.currentUser) { logout(false); customAlert('Sua sessão expirou. Entre novamente.'); }
+                    throw error;
+                }
+                if (session && session !== cloudSession) throw new Error('Sessão encerrada.');
+                return data;
+            } catch (error) {
+                if (error.name === 'AbortError') throw new Error('A conexão demorou demais. Seus dados locais foram preservados.');
+                throw error;
+            } finally { clearTimeout(timer); session?.controller.signal.removeEventListener('abort', abort); }
+        }
+        function cloudPost(path, data, session = cloudSession) { return cloudFetch(path, {method: 'POST', body: JSON.stringify(data)}, session); }
+        function applyServerIdentity(account, user) {
+            if (!validUUID(user.id) || typeof user.username !== 'string' || !/^VTX-[A-Z0-9]{8}$/.test(user.permanent_code)) throw new Error('Conta inválida no servidor.');
+            account.cloudUserId = user.id; account.username = user.username; account.name = user.username;
+            account.permanentCode = user.permanent_code; account.codeChangedAt = user.permanent_code_changed_at;
+            account.peerCode = user.id;
+            if (user.mailboxId) {
+                if (!validUUID(user.mailboxId) || !validPublicKey(user.publicKey) || !/^[a-f0-9]{64}$/.test(user.mailboxAuthHash)) throw new Error('Identidade pública inválida.');
+                if (account.privateKey && (account.mailboxId !== user.mailboxId || account.publicKey.x !== user.publicKey.x || account.publicKey.y !== user.publicKey.y || account.mailboxAuthHash !== user.mailboxAuthHash)) throw new Error('As chaves deste dispositivo não correspondem à conta. Os dados locais foram preservados.');
+                account.mailboxId = user.mailboxId; account.mailboxAuthHash = user.mailboxAuthHash; account.publicKey = user.publicKey; account.cloudMailboxRegistered = true;
+            }
+            // The account email is deliberately not copied into the local profile.
+        }
+        async function finishCloudLogin(result) {
+            if (window.appState.currentUser) logout();
+            if (!/^[a-f0-9]{64}$/.test(result.token)) throw new Error('Sessão inválida.');
+            const s = {token: result.token, userId: result.user.id, controller: new AbortController(), syncing: null, timer: null, expiresAt: result.expires_at};
+            cloudSession = s;
+            try {
+                const fresh = await cloudFetch('/me', {}, s);
+                let account = window.appState.accounts.find(a => a.cloudUserId === fresh.user.id);
+                if (!account) {
+                    account = {id: generateUUID(), name: fresh.user.username, avatar: '', banner: '', bio: '', gameFav: '', gamePlaying: '', badges: [], spaces: [], friends: [], chats: {}};
+                    applyServerIdentity(account, fresh.user);
+                    window.appState.accounts.push(account);
+                } else applyServerIdentity(account, fresh.user);
+                saveLocalData(account);
+                // Server friends must be loaded before opening any cloud-account tunnel.
+                await syncCloudFriends(account, s);
+                if (cloudSession !== s) return;
+                loginAccount(account.id);
+                s.timer = setInterval(() => void syncCloudFriends().catch(showCloudSyncError), 15000);
+                document.getElementById('cloud-login-pass').value = '';
+                document.getElementById('new-account-pass').value = '';
+                closeModal('passwordModal');
+            } catch (error) {
+                if (window.appState.currentUser?.cloudUserId === s.userId) logout();
+                else { s.controller.abort(); if (cloudSession === s) cloudSession = null; }
+                throw error;
+            }
+        }
+        window.loginCloudAccount = async () => {
+            if (cloudAuthBusy) return;
+            cloudAuthBusy = true;
+            try {
+                const login = document.getElementById('cloud-login-name').value.trim();
+                const password = document.getElementById('cloud-login-pass').value;
+                const result = await cloudPost('/auth/login', {login, password}, null);
+                await finishCloudLogin(result);
+            } catch (e) { customAlert(e.message); }
+            finally { cloudAuthBusy = false; document.getElementById('cloud-login-pass').value = ''; }
+        };
+        function showCloudSyncError(error) {
+            if (isCloudAccount()) document.getElementById('account-status').textContent = error.status === 401 ? 'Entre novamente.' : 'Sincronização indisponível. Seus dados locais foram preservados.';
+        }
+        async function syncCloudFriends(account = window.appState.currentUser, s = cloudSession) {
+            if (!s || !account?.cloudUserId || s.userId !== account.cloudUserId) return;
+            if (s.syncing) return s.syncing;
+            s.syncing = (async () => {
+                const [list, requests] = await Promise.all([cloudFetch('/friends', {}, s), cloudFetch('/friends/requests', {}, s)]);
+                if (cloudSession !== s || s.controller.signal.aborted) return;
+                if (!Array.isArray(list.friends) || !Array.isArray(requests.requests)) throw new Error('Lista de amigos inválida.');
+                const previous = new Map((account.friends || []).map(f => [f.code, f])), next = new Map();
+                for (const item of list.friends) {
+                    if (!validUUID(item.user?.id) || item.user.id === account.cloudUserId || item.state !== 'accepted') throw new Error('Amizade inválida.');
+                    const old = previous.get(item.user.id), server = selectPublicProfile(item.user, true);
+                    const profile = {...(old?.profile || {}), ...server};
+                    // Photos arrive exclusively on an authenticated PeerJS tunnel.
+                    if (old && usableConnection(window.appState.connections[item.user.id])) {
+                        for (const key of ['avatar','banner','bio','gameFav','gamePlaying','badges']) profile[key] = old.profile[key];
+                    }
+                    next.set(item.user.id, {code: item.user.id, permanentCode: item.user.permanent_code, friendshipId: item.friendship_id, profile});
+                }
+                const incoming = {}, outgoing = {};
+                for (const item of requests.requests) {
+                    if (!validUUID(item.user?.id) || item.state !== 'pending') throw new Error('Solicitação inválida.');
+                    (item.direction === 'incoming' ? incoming : outgoing)[item.user.id] = {id: item.friendship_id, profile: selectPublicProfile(item.user), permanentCode: item.user.permanent_code};
+                }
+                const saved = {friends: account.friends, requests: account.requests, outgoingRequests: account.outgoingRequests};
+                Object.assign(account, {friends: [...next.values()], requests: incoming, outgoingRequests: outgoing});
+                try { saveLocalData(account); } catch (e) { Object.assign(account, saved); throw e; }
+                if (window.appState.currentUser !== account) return;
+                for (const [code, conn] of Object.entries(window.appState.connections)) if (!next.has(code)) conn.close();
+                const active = window.appState.activeChatId;
+                if (active && !next.has(active)) {
+                    window.appState.activeChatId = null;
+                    document.getElementById('message-input-area').classList.add('hidden');
+                    document.getElementById('chat-title').textContent = 'Histórico local — amizade indisponível';
+                }
+                renderFriendsList(); renderRequests(); maintainNetwork(); mailboxTick();
+                document.getElementById('account-status').textContent = 'Amigos sincronizados com sua conta.';
+            })().finally(() => { s.syncing = null; });
+            return s.syncing;
+        }
+        async function registerCloudMailbox(account) {
+            const s = cloudSession;
+            if (!account.cloudUserId || account.cloudMailboxRegistered) return;
+            if (s?.userId !== account.cloudUserId) throw new Error('Entre novamente.');
+            const result = await cloudFetch('/me/mailbox', {method: 'POST', headers: {'X-Mailbox-Token': account.mailboxToken}, body: JSON.stringify({mailboxId: account.mailboxId, mailboxAuthHash: account.mailboxAuthHash, publicKey: selectPublicProfile(account, true).publicKey})}, s);
+            if (cloudSession !== s) return;
+            applyServerIdentity(account, result.user); saveLocalData(account);
+        }
+        function refreshAccountUI() {
+            const a = window.appState.currentUser; if (!a) return;
+            const cloud = !!a.cloudUserId, code = cloud ? a.permanentCode : a.peerCode;
+            document.getElementById('my-daily-code').value = code;
+            document.getElementById('my-code-display').textContent = '#' + code;
+            document.getElementById('cloud-account-controls').classList.toggle('hidden', !cloud);
+            document.getElementById('friend-code-input').placeholder = cloud ? 'VTX-XXXXXXXX' : '12345678';
+            document.getElementById('friend-code-input').maxLength = cloud ? 12 : 8;
+            document.getElementById('set-username').readOnly = cloud;
+            document.getElementById('account-status').textContent = cloud ? 'Conta online. Histórico e fotos permanecem neste dispositivo.' : 'Conta local antiga preservada. Para usar contas online, cadastre-se na tela de entrada.';
+            document.getElementById('new-permanent-code').value = cloud ? a.permanentCode : '';
+            document.getElementById('identity-status').textContent = a.cloudMailboxRegistered && !a.privateKey ? 'Importe a identidade do dispositivo original para receber mensagens offline.' : 'Guarde uma cópia da identidade antes de trocar de computador.';
+            document.getElementById('my-avatar').src = safeImageURL(a.avatar) || DEFAULT_AVATAR;
+        }
+        window.changePermanentCode = async () => {
+            const a = window.appState.currentUser, s = cloudSession; if (!a?.cloudUserId) return;
+            try {
+                const result = await cloudPost('/me/change-code', {code: document.getElementById('new-permanent-code').value});
+                if (cloudSession !== s || window.appState.currentUser !== a) return;
+                applyServerIdentity(a, result.user); saveLocalData(a); refreshAccountUI();
+                customAlert('Código alterado. A próxima alteração estará disponível em 60 dias. Seus amigos e chats foram preservados.');
+            } catch (e) { customAlert(e.message); }
+        };
+        async function cloudFriendRequest() {
+            const status = document.getElementById('add-friend-status');
+            try {
+                await cloudPost('/friends/request', {permanent_code: document.getElementById('friend-code-input').value});
+                await syncCloudFriends(); status.textContent = 'Solicitação registrada. Confira a aba Pendentes.';
+            } catch (e) { status.textContent = e.message; }
+        }
+        async function cloudDecideFriend(code, accept) {
+            const request = window.appState.currentUser?.requests[code]; if (!request || request.busy) return;
+            request.busy = true;
+            try { await cloudPost(accept ? '/friends/accept' : '/friends/reject', {friendship_id: request.id}); await syncCloudFriends(); }
+            catch (e) { customAlert(e.message); }
+            finally { delete request.busy; }
+        }
+        // A public PeerJS ID alone is not proof of ownership. Challenge proofs are
+        // short-lived and single-use; the real session token never crosses PeerJS.
+        async function cloudPeerHandshake(conn, code, message, ready, current) {
+            const s = cloudSession;
+            if (!s || !current() || !isFriend(code)) return conn.close();
+            try {
+                if (message.type === 'peer_challenge') {
+                    if (conn.proofSent || !/^[a-f0-9]{64}$/.test(message.challenge)) return;
+                    conn.proofSent = true;
+                    const result = await cloudPost('/auth/peer-proof', {recipient_id: code, challenge: message.challenge}, s);
+                    if (current() && cloudSession === s) conn.send({type: 'peer_proof', proof: result.proof});
+                } else if (message.type === 'peer_proof') {
+                    if (conn.proofVerifying || conn.authenticated || !/^[a-f0-9]{64}$/.test(message.proof)) return;
+                    conn.proofVerifying = true;
+                    await cloudPost('/auth/verify-peer', {sender_id: code, challenge: conn.authChallenge, proof: message.proof}, s);
+                    if (current() && cloudSession === s) { conn.authenticated = true; clearTimeout(conn.authTimer); ready(); }
+                }
+            } catch { if (current()) conn.close(); }
+        }
+        async function backupKey(password, salt) {
+            if (password.length < 12 || password.length > 128) throw new Error('Use uma senha de backup com 12–128 caracteres.');
+            const raw = await crypto.subtle.importKey('raw', utf8.encode(password), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600000}, raw, {name: 'AES-GCM', length: 256}, false, ['encrypt','decrypt']);
+        }
+        window.exportIdentity = async () => {
+            const a = window.appState.currentUser;
+            try {
+                if (!a?.privateKey || !a.mailboxToken) throw new Error('Este dispositivo ainda não tem as chaves privadas.');
+                const password = document.getElementById('identity-backup-pass').value;
+                const salt = crypto.getRandomValues(new Uint8Array(32)), iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await backupKey(password, salt);
+                const data = {cloudUserId: a.cloudUserId || null, mailboxId: a.mailboxId, mailboxToken: a.mailboxToken, mailboxAuthHash: a.mailboxAuthHash, publicKey: a.publicKey, privateKey: a.privateKey};
+                const ciphertext = await crypto.subtle.encrypt({name: 'AES-GCM', iv, additionalData: utf8.encode('Vortex identity backup v1')}, key, utf8.encode(JSON.stringify(data)));
+                const file = {version: 1, iterations: 600000, salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(ciphertext)};
+                const url = URL.createObjectURL(new Blob([JSON.stringify(file)], {type: 'application/json'}));
+                const link = document.createElement('a'); link.href = url; link.download = 'vortex-identidade-' + (a.permanentCode || 'local') + '.json'; link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 30000);
+                customAlert('Identidade exportada com criptografia. Guarde o arquivo e a senha em locais seguros. O histórico continua neste navegador.');
+            } catch (e) { customAlert(e.message); }
+            finally { document.getElementById('identity-backup-pass').value = ''; }
+        };
+        window.importIdentity = async event => {
+            const a = window.appState.currentUser, s = cloudSession, file = event.target.files[0]; if (!a || !file) return;
+            try {
+                if (file.size > 12000) throw new Error('Arquivo de identidade inválido.');
+                const backup = JSON.parse(await file.text());
+                if (backup.version !== 1 || backup.iterations !== 600000) throw new Error('Formato de backup não suportado.');
+                const salt = fromBase64(backup.salt), iv = fromBase64(backup.iv);
+                if (salt.length !== 32 || iv.length !== 12) throw new Error('Backup inválido.');
+                const key = await backupKey(document.getElementById('identity-backup-pass').value, salt);
+                const raw = await crypto.subtle.decrypt({name: 'AES-GCM', iv, additionalData: utf8.encode('Vortex identity backup v1')}, key, fromBase64(backup.ciphertext));
+                const data = JSON.parse(new TextDecoder().decode(raw));
+                if (data.cloudUserId !== (a.cloudUserId || null) || data.mailboxId !== a.mailboxId || data.mailboxAuthHash !== a.mailboxAuthHash || data.publicKey?.x !== a.publicKey?.x || data.publicKey?.y !== a.publicKey?.y || data.privateKey?.x !== a.publicKey?.x || data.privateKey?.y !== a.publicKey?.y || !/^[a-f0-9]{64}$/.test(data.mailboxToken)) throw new Error('Este backup pertence a outra identidade.');
+                const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8.encode(data.mailboxToken))), n => n.toString(16).padStart(2,'0')).join('');
+                if (hash !== a.mailboxAuthHash) throw new Error('Token do backup inválido.');
+                const privateKey = await crypto.subtle.importKey('jwk', data.privateKey, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits']);
+                // Prove that the private scalar corresponds to the pinned public point.
+                const test = await crypto.subtle.generateKey({name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits']);
+                const pub = await crypto.subtle.importKey('jwk', a.publicKey, {name: 'ECDH', namedCurve: 'P-256'}, false, []);
+                const one = await crypto.subtle.deriveBits({name: 'ECDH', public: test.publicKey}, privateKey, 256);
+                const two = await crypto.subtle.deriveBits({name: 'ECDH', public: pub}, test.privateKey, 256);
+                if (toBase64(one) !== toBase64(two)) throw new Error('Par de chaves inválido.');
+                if (window.appState.currentUser !== a || cloudSession !== s) return;
+                const previous = {privateKey: a.privateKey, mailboxToken: a.mailboxToken};
+                a.privateKey = data.privateKey; a.mailboxToken = data.mailboxToken;
+                try { saveLocalData(a); } catch (e) { Object.assign(a, previous); throw e; }
+                await startMailbox(a); refreshAccountUI(); customAlert('Identidade importada. A caixa postal está sendo consultada.');
+            } catch (e) { customAlert(e.name === 'OperationError' ? 'Senha de backup incorreta ou arquivo danificado.' : e.message); }
+            finally { event.target.value = ''; document.getElementById('identity-backup-pass').value = ''; }
+        };
+        async function checkLocalPassword(account, password) {
+            if (account.localPasswordHash) {
+                const key = await crypto.subtle.importKey('raw', utf8.encode(password), 'PBKDF2', false, ['deriveBits']);
+                const bits = await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: fromBase64(account.localPasswordSalt), iterations: 600000}, key, 256);
+                return toBase64(bits) === account.localPasswordHash;
+            }
+            if (account.password && account.password !== password) return false;
+            // Migrate only after a successful legacy login; friends/chats are untouched.
+            const salt = crypto.getRandomValues(new Uint8Array(32));
+            const key = await crypto.subtle.importKey('raw', utf8.encode(password), 'PBKDF2', false, ['deriveBits']);
+            const bits = await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600000}, key, 256);
+            const old = account.password;
+            account.localPasswordHash = toBase64(bits); account.localPasswordSalt = toBase64(salt); delete account.password;
+            try { saveLocalData(account); } catch (e) { account.password = old; delete account.localPasswordHash; delete account.localPasswordSalt; throw e; }
+            return true;
+        }
+        window.addEventListener('focus', () => void syncCloudFriends().catch(showCloudSyncError));
+        window.addEventListener('online', () => void syncCloudFriends().catch(showCloudSyncError));
+
+        // --- Utility Functions ---
+        // Fallback para crypto.randomUUID(), que só existe em contexto seguro
+        // (https:// ou localhost). Se a página for aberta como file:// ou http://
+        // simples, crypto.randomUUID() não existe e quebra a criação de contas.
+        function generateUUID() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 : Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        window.customAlert = (message, title = "Aviso do Sistema") => {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            openModal('customAlertModal');
+        };
+
+        window.openModal = (id) => { document.getElementById(id).classList.remove('hidden'); };
+        window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); };
+
+        function generateDailyCode() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+
+        function saveLocalData(account = window.appState.currentUser) {
+            if (!account) return;
+            const index = window.appState.accounts.findIndex(a => a.id === account.id);
+            if(index > -1) {
+                window.appState.accounts[index] = account;
+                localStorage.setItem('vortex_accounts', JSON.stringify(window.appState.accounts));
+            }
+        }
+
+        // --- Auth & Profile Management ---
+        function renderAccounts() {
+            const list = document.getElementById('account-list');
+            list.innerHTML = '';
+            
+            if (window.appState.accounts.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-400 text-center font-light">Identidade não detectada. Forje uma nova credencial.</p>';
+                return;
+            }
+
+            window.appState.accounts.forEach(acc => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 bg-black/30 border border-white/5 rounded-xl cursor-pointer hover:bg-white/10 hover:border-vortex transition-all group';
+                div.innerHTML = `
+                    <div class="flex items-center flex-1 acc-login-trigger">
+                        <img src="${escapeHTML(safeImageURL(acc.avatar) || DEFAULT_AVATAR)}" class="w-12 h-12 rounded-lg mr-4 object-cover border border-white/10 group-hover:border-vortex transition-colors">
+                        <div>
+                            <p class="font-bold text-white text-lg"></p>
+                            <p class="text-xs text-cyan-500 font-mono tracking-widest">NÓ LOCAL SECRETO</p>
+                        </div>
+                    </div>
+                    <button class="acc-delete-trigger text-gray-500 hover:text-red-500 p-3 transition-colors rounded-lg hover:bg-black/40"><i class="fas fa-trash"></i></button>
+                `;
+                // Usamos textContent (não innerHTML) para o nome, evitando quebra
+                // do markup ou execução de HTML se o nome tiver aspas/tags.
+                div.querySelector('p.font-bold').textContent = acc.name;
+                div.querySelector('p.text-xs').textContent = acc.cloudUserId ? 'CONTA ONLINE' : 'CONTA LOCAL ANTIGA';
+                div.querySelector('.acc-login-trigger').addEventListener('click', () => promptLogin(acc.id, acc.name));
+                div.querySelector('.acc-delete-trigger').addEventListener('click', (event) => deleteAccount(acc.id, event));
+                list.appendChild(div);
+            });
+        }
+
+        const ACCOUNT_CREATIONS_KEY = 'vortex_account_creations';
+        const ACCOUNT_CREATION_DAY_MS = 24 * 60 * 60 * 1000;
+        const ACCOUNT_CREATION_WINDOW_MS = 60 * ACCOUNT_CREATION_DAY_MS;
+        const ACCOUNT_CREATION_LIMIT = 2;
+
+        // Proteção exclusivamente local, compartilhada pelas contas desta origem.
+        // Pode ser contornada limpando os dados do navegador, usando outro navegador
+        // ou dispositivo. Não identifica dispositivos e não usa IP, cookies ou servidor.
+        // O histórico é independente de vortex_accounts: excluir uma conta não libera vaga.
+        function readAccountCreationHistory(now = Date.now()) {
+            let history;
+            try {
+                const raw = localStorage.getItem(ACCOUNT_CREATIONS_KEY);
+                history = raw === null ? [] : JSON.parse(raw);
+            } catch {
+                throw new Error('Não foi possível ler o controle local de cadastros. Verifique se o armazenamento do navegador está disponível.');
+            }
+            if (!Array.isArray(history) || history.some(time => !Number.isSafeInteger(time) || time < 0)) {
+                // Não sobrescrever dados corrompidos silenciosamente nem liberar cadastros.
+                throw new Error('O controle local de cadastros contém dados inválidos. Nenhuma conta foi criada.');
+            }
+            // Libera a vaga exatamente quando o registro completa 60 dias.
+            return history.filter(time => time > now - ACCOUNT_CREATION_WINDOW_MS).sort((a, b) => a - b);
+        }
+
+        function saveAccountCreationHistory(history) {
+            try { localStorage.setItem(ACCOUNT_CREATIONS_KEY, JSON.stringify(history)); }
+            catch { throw new Error('Não foi possível salvar o controle local de cadastros. Verifique o espaço e as permissões de armazenamento do navegador.'); }
+        }
+
+        function canCreateAccount() {
+            const now = Date.now();
+            const history = readAccountCreationHistory(now);
+            // A gravação também verifica o armazenamento antes de iniciar o cadastro.
+            saveAccountCreationHistory(history);
+            if (history.length < ACCOUNT_CREATION_LIMIT) return {allowed: true, daysLeft: 0};
+            // Normalmente há dois registros. Também trata históricos maiores sem liberar cedo.
+            const nextSlot = history[history.length - ACCOUNT_CREATION_LIMIT] + ACCOUNT_CREATION_WINDOW_MS;
+            return {allowed: false, daysLeft: Math.max(1, Math.ceil((nextSlot - now) / ACCOUNT_CREATION_DAY_MS))};
+        }
+
+        function registerAccountCreation() {
+            const now = Date.now();
+            const history = readAccountCreationHistory(now);
+            history.push(now);
+            saveAccountCreationHistory(history);
+        }
+
+        window.createNewAccount = async () => {
+            if (cloudAuthBusy) return;
+            cloudAuthBusy = true;
+            try {
+                const createAllowedAccount = async () => {
+                    const permission = canCreateAccount();
+                    if (!permission.allowed) {
+                        customAlert('Limite de contas atingido. Você poderá criar outra conta em aproximadamente ' + permission.daysLeft + (permission.daysLeft === 1 ? ' dia.' : ' dias.'));
+                        return;
+                    }
+                    const username = document.getElementById('new-account-name').value.trim();
+                    const email = document.getElementById('new-account-email').value.trim();
+                    const password = document.getElementById('new-account-pass').value;
+                    if (password.length < 12 || password.length > 128) throw new Error('A senha deve ter entre 12 e 128 caracteres.');
+                    // O cadastro existente é preservado; a trava não consulta nenhum serviço.
+                    const result = await cloudPost('/auth/register', {username, email, password}, null);
+                    // Aqui a conta já foi criada com sucesso. Uma falha no login automático
+                    // posterior não desfaz essa criação e não deve devolver a vaga.
+                    let recordingError = null;
+                    try { registerAccountCreation(); }
+                    catch (error) { recordingError = error; }
+                    await finishCloudLogin(result);
+                    document.getElementById('new-account-name').value = '';
+                    document.getElementById('new-account-email').value = '';
+                    if (recordingError) customAlert('Sua conta foi criada, mas o navegador não conseguiu registrar o limite local. ' + recordingError.message);
+                };
+                // Web Locks é uma API local do navegador: serializa cadastros entre abas.
+                // Nos navegadores sem essa API, cloudAuthBusy ainda evita cliques simultâneos.
+                if (navigator.locks?.request) await navigator.locks.request(ACCOUNT_CREATIONS_KEY, createAllowedAccount);
+                else await createAllowedAccount();
+            } catch (e) { customAlert(e.message); }
+            finally { cloudAuthBusy = false; document.getElementById('new-account-pass').value = ''; }
+        };
+
+        window.deleteAccount = (id, e) => {
+            e.stopPropagation();
+            if (!window.confirm('Remover esta conta deste dispositivo? O histórico e as chaves locais serão removidos. Exporte a identidade antes. A conta online no servidor não será apagada.')) return;
+            window.appState.accounts = window.appState.accounts.filter(a => a.id !== id);
+            localStorage.setItem('vortex_accounts', JSON.stringify(window.appState.accounts));
+            renderAccounts();
+        };
+
+        window.promptLogin = (id, name) => {
+            const selected = window.appState.accounts.find(a => a.id === id);
+            if (selected?.cloudUserId) {
+                document.getElementById('cloud-login-name').value = selected.username;
+                document.getElementById('cloud-login-pass').focus();
+                return;
+            }
+            window.appState.pendingLoginId = id;
+            document.getElementById('pass-modal-username').innerText = `Conta: ${name}`;
+            document.getElementById('login-password-input').value = '';
+            openModal('passwordModal');
+        };
+
+        window.verifyAndLogin = async () => {
+            const passInput = document.getElementById('login-password-input').value;
+            const acc = window.appState.accounts.find(a => a.id === window.appState.pendingLoginId);
+            if (!acc) return;
+
+            if (acc.cloudUserId || cloudAuthBusy) return;
+            cloudAuthBusy = true;
+            try {
+                if (!await checkLocalPassword(acc, passInput)) return customAlert('Senha incorreta.');
+            } catch (e) { return customAlert(e.message); }
+            finally { cloudAuthBusy = false; }
+            document.getElementById('login-password-input').value = '';
+            closeModal('passwordModal');
+            loginAccount(acc.id);
+        };
+
+        window.loginAccount = (id) => {
+            const acc = window.appState.accounts.find(a => a.id === id);
+            if (!acc) return;
+            if (acc.cloudUserId && cloudSession?.userId !== acc.cloudUserId) return customAlert('Entre na conta online usando sua senha.');
+            if (window.appState.currentUser && window.appState.currentUser !== acc) logout();
+            window.appState.currentUser = acc;
+            if(!window.appState.currentUser.badges) window.appState.currentUser.badges = [];
+            if(!window.appState.currentUser.spaces) window.appState.currentUser.spaces = [];
+            if(!window.appState.currentUser.chats) window.appState.currentUser.chats = {};
+
+            if (acc.bgUrl) applyAppBackground(acc.bgUrl);
+
+            // Preserve the last published code when migrating old accounts.
+            const storedCodeData = JSON.parse(localStorage.getItem('vortex_daily_' + acc.id) || 'null');
+            acc.peerCode = acc.cloudUserId || acc.peerCode || storedCodeData?.code || generateDailyCode();
+            window.appState.dailyCode = acc.peerCode;
+            acc.friends = [...new Map((acc.friends || []).map(f => [f.code, f])).values()];
+            acc.requests = acc.requests || {};
+            acc.outgoingRequests = acc.outgoingRequests || {};
+            acc.requestDecisions = acc.requestDecisions || {};
+            migrateMessages(acc);
+            saveLocalData();
+            renderRequests();
+
+            // Setup UI for User
+            document.getElementById('my-daily-code').value = window.appState.dailyCode;
+            document.getElementById('my-username').innerText = acc.name;
+            document.getElementById('my-code-display').innerText = '#' + window.appState.dailyCode;
+            if (acc.avatar) document.getElementById('my-avatar').src = acc.avatar;
+            
+            // Sync settings inputs
+            document.getElementById('set-username').value = acc.name;
+            document.getElementById('set-bio').value = acc.bio || '';
+            document.getElementById('set-avatar').value = acc.avatar || '';
+            document.getElementById('set-banner').value = acc.banner || '';
+            document.getElementById('set-game-fav').value = acc.gameFav || '';
+            document.getElementById('set-game-playing').value = acc.gamePlaying || '';
+
+            // Initialize PeerJS
+            initPeerJS();
+            
+            // Transition UI
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            updateProfilePreview();
+            renderFriendsList();
+            renderSpacesList();
+            getAudioDevices();
+            refreshAccountUI();
+            void startMailbox(acc);
+        };
+
+        let networkTimer = null;
+        let retryAt = {};
+        let retryCount = {};
+        let peerRetryAt = 0;
+        const isFriend = code => !!window.appState.currentUser?.friends.some(f => f.code === code);
+        // Explicit allowlist: a complete account or private key must never be published.
+        function selectPublicProfile(source = {}, includeMailbox = false) {
+            source = source && typeof source === 'object' ? source : {};
+            const p = {};
+            for (const key of ['name', 'avatar', 'banner', 'bio', 'gameFav', 'gamePlaying']) p[key] = typeof source[key] === 'string' ? source[key].slice(0, 4000) : '';
+            p.name = p.name || 'Conexão';
+            p.badges = (Array.isArray(source.badges) ? source.badges : []).filter(b => b && typeof b === 'object').slice(0, 100).map(b => ({
+                name: String(b.name || '').slice(0, 100), icon: /^fa-[a-z0-9-]+$/.test(b.icon) ? b.icon : 'fa-star', code: String(b.code || '').slice(0, 100)
+            }));
+            const key = source.publicKey || source.mailboxPublicKey; // Read legacy profiles without rotating identities.
+            if (includeMailbox && validUUID(source.mailboxId) && /^[a-f0-9]{64}$/.test(source.mailboxAuthHash) && validPublicKey(key)) {
+                p.mailboxId = source.mailboxId; p.mailboxAuthHash = source.mailboxAuthHash;
+                p.publicKey = {kty: 'EC', crv: 'P-256', x: key.x, y: key.y, ext: true};
+            }
+            return p;
+        }
+        function publicProfile(code) { return selectPublicProfile(window.appState.currentUser, isFriend(code)); }
+        const VORTEX_MAILBOX_URL = 'https://vortex-mailbox.2010mateusbasso.workers.dev';
+        const validUUID = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
+        const validPublicKey = key => key?.kty === 'EC' && key.crv === 'P-256' && /^[A-Za-z0-9_-]{43}$/.test(key.x) && /^[A-Za-z0-9_-]{43}$/.test(key.y);
+        const identityJobs = new WeakMap();
+        const utf8 = new TextEncoder();
+        function toBase64(bytes) { return btoa(String.fromCharCode(...new Uint8Array(bytes))); }
+        function fromBase64(text) {
+            if (typeof text !== 'string' || text.length > 54000 || !/^[A-Za-z0-9+/]*={0,2}$/.test(text)) throw new Error('Base64 inválido');
+            return Uint8Array.from(atob(text), c => c.charCodeAt(0));
+        }
+        function randomHex(size) { return Array.from(crypto.getRandomValues(new Uint8Array(size)), n => n.toString(16).padStart(2, '0')).join(''); }
+        async function ensureMailboxIdentity(account) {
+            if (identityJobs.has(account)) return identityJobs.get(account);
+            const job = (async () => {
+                if (!window.crypto?.subtle) throw new Error('Abra o Vortex em HTTPS ou localhost para usar a caixa postal criptografada.');
+                if (account.cloudMailboxRegistered && (!account.privateKey || !account.mailboxToken)) throw new Error('Importe a identidade do dispositivo original nas configurações para usar mensagens offline.');
+                let privateKey = account.privateKey || account.mailboxPrivateKey;
+                let publicKey = account.publicKey || account.mailboxPublicKey;
+                if (!!privateKey !== !!publicKey) throw new Error('Identidade criptográfica incompleta; os dados locais foram preservados.');
+                if (!privateKey) {
+                    const pair = await crypto.subtle.generateKey({name: 'ECDH', namedCurve: 'P-256'}, true, ['deriveBits']);
+                    privateKey = await crypto.subtle.exportKey('jwk', pair.privateKey);
+                    publicKey = await crypto.subtle.exportKey('jwk', pair.publicKey);
+                } else {
+                    if (!validPublicKey(publicKey) || privateKey.x !== publicKey.x || privateKey.y !== publicKey.y || typeof privateKey.d !== 'string') throw new Error('Chaves locais inválidas; nenhum dado foi substituído.');
+                    await crypto.subtle.importKey('jwk', privateKey, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits']);
+                }
+                const token = account.mailboxToken || randomHex(32);
+                const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8.encode(token))), n => n.toString(16).padStart(2, '0')).join('');
+                const mailboxId = account.mailboxId || generateUUID();
+                if (!validUUID(mailboxId)) throw new Error('mailboxId local inválido; nenhum identificador foi trocado.');
+                Object.assign(account, {mailboxId, mailboxToken: token, mailboxAuthHash: hash, privateKey, publicKey});
+                account.deliveryAcks = account.deliveryAcks || {};
+                saveLocalData(account);
+            })();
+            identityJobs.set(account, job);
+            try { await job; } finally { identityJobs.delete(account); }
+        }
+        function migrateMessages(account) {
+            account.deliveryAcks = account.deliveryAcks || {};
+            for (const chat of Object.values(account.chats || {})) {
+                if (!Array.isArray(chat)) continue;
+                for (const m of chat) {
+                    m.messageId = m.messageId || (validUUID(m.id) ? m.id : generateUUID());
+                    m.id = m.messageId;
+                    m.status = m.status || (m.delivered === false ? 'pending_local' : 'delivered');
+                    if (m.netPayload) m.netPayload.messageId = m.messageId;
+                    // This timestamp is transport/session state, not message history.
+                    delete m.lastPeerAttempt;
+                    if (m.offlineEnvelope?.envelope && !m.offlineEnvelope.payload) {
+                        const old = m.offlineEnvelope;
+                        m.offlineEnvelope = {id: m.messageId, sender_id: old.sender_id, recipient_id: old.recipient_id,
+                            recipient_auth_hash: old.recipient_auth_hash, payload: JSON.stringify(old.envelope)};
+                        m.nextCloudAttempt = 0;
+                    }
+                }
+            }
+            for (const f of account.friends) f.profile = selectPublicProfile(f.profile, true);
+        }
+        async function envelopeKey(account, peerProfile, salt) {
+            const secret = await crypto.subtle.importKey('jwk', account.privateKey, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits']);
+            const pub = await crypto.subtle.importKey('jwk', peerProfile.publicKey, {name: 'ECDH', namedCurve: 'P-256'}, false, []);
+            const shared = await crypto.subtle.deriveBits({name: 'ECDH', public: pub}, secret, 256);
+            const material = await crypto.subtle.importKey('raw', shared, 'HKDF', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({name: 'HKDF', hash: 'SHA-256', salt, info: utf8.encode('Vortex mailbox v1')}, material, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
+        }
+        function envelopeAAD(row) { return utf8.encode(JSON.stringify([1, row.id, row.sender_id, row.recipient_id])); }
+        async function encryptMailbox(account, profile, payload, messageId) {
+            if (!validUUID(messageId) || !profile.mailboxId || !validPublicKey(profile.publicKey)) throw new Error('Aguardando identidade pública do amigo.');
+            const salt = crypto.getRandomValues(new Uint8Array(32)), iv = crypto.getRandomValues(new Uint8Array(12));
+            const row = {id: messageId, sender_id: account.mailboxId, recipient_id: profile.mailboxId, recipient_auth_hash: profile.mailboxAuthHash};
+            const key = await envelopeKey(account, profile, salt);
+            const ciphertext = await crypto.subtle.encrypt({name: 'AES-GCM', iv, additionalData: envelopeAAD(row), tagLength: 128}, key, utf8.encode(JSON.stringify(payload)));
+            row.payload = JSON.stringify({version: 1, alg: 'ECDH-P256-HKDF-SHA256-A256GCM', salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(ciphertext)});
+            return row;
+        }
+        async function decryptMailbox(account, profile, row) {
+            if (!validUUID(row.id) || row.recipient_id !== account.mailboxId || row.sender_id !== profile.mailboxId || typeof row.payload !== 'string' || row.payload.length > 60000) throw new Error('Envelope inválido');
+            const e = JSON.parse(row.payload);
+            if (!e || (e.version ?? e.v) !== 1 || e.alg !== 'ECDH-P256-HKDF-SHA256-A256GCM') throw new Error('Versão de envelope inválida');
+            const salt = fromBase64(e.salt), iv = fromBase64(e.iv), ciphertext = fromBase64(e.ciphertext);
+            if (salt.length !== 32 || iv.length !== 12 || ciphertext.length < 16 || ciphertext.length > 40000) throw new Error('Envelope inválido');
+            const key = await envelopeKey(account, profile, salt);
+            return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv, additionalData: envelopeAAD(row), tagLength: 128}, key, ciphertext)));
+        }
+
+
+        let mailboxSession = null;
+        function stopMailbox() {
+            if (!mailboxSession) return;
+            clearInterval(mailboxSession.timer);
+            mailboxSession.controller.abort();
+            mailboxSession = null;
+        }
+        async function startMailbox(account) {
+            stopMailbox();
+            const session = {account, controller: new AbortController(), polling: null, isCheckingMailbox: false, draining: null, ready: false, initializing: true, retryAt: 0};
+            mailboxSession = session;
+            session.timer = setInterval(mailboxTick, 15000);
+            try {
+                await ensureMailboxIdentity(account);
+                if (!mailboxCurrent(session)) return;
+                await registerCloudMailbox(account);
+                if (!mailboxCurrent(session)) return;
+                session.ready = true;
+                for (const [code, conn] of Object.entries(window.appState.connections)) {
+                    if (isFriend(code)) safeSend(conn, {type: 'profile_sync', data: publicProfile(code)});
+                }
+                mailboxTick();
+            } catch (e) {
+                if (mailboxCurrent(session)) { session.retryAt = Date.now() + 15000; document.getElementById('mailbox-status').textContent = e.message || 'Caixa postal indisponível; mensagens preservadas.'; }
+            } finally { session.initializing = false;
+            }
+        }
+        function mailboxCurrent(s) { return mailboxSession === s && window.appState.currentUser === s.account && !s.controller.signal.aborted; }
+        function mailboxTick() {
+            const s = mailboxSession;
+            if (s && mailboxCurrent(s) && !s.ready && !s.initializing && Date.now() >= s.retryAt && !(s.account.cloudMailboxRegistered && !s.account.privateKey)) void startMailbox(s.account);
+            void pollMailbox(); void drainOutbox();
+        }
+        async function mailboxFetch(session, path, options = {}, authenticated = false) {
+            if (!mailboxCurrent(session)) throw new Error('Sessão encerrada');
+            const controller = new AbortController(), abort = () => controller.abort();
+            session.controller.signal.addEventListener('abort', abort, {once: true});
+            const timer = setTimeout(abort, 12000);
+            try {
+                const headers = {...(options.headers || {})};
+                if (options.body) headers['Content-Type'] = 'application/json';
+                if (authenticated) headers['X-Mailbox-Token'] = session.account.mailboxToken;
+                if (session.account.cloudUserId && cloudSession?.userId === session.account.cloudUserId) headers.Authorization = 'Bearer ' + cloudSession.token;
+                const response = await fetch(VORTEX_MAILBOX_URL + path, {...options, headers, signal: controller.signal, cache: 'no-store', credentials: 'omit', redirect: 'error'});
+                if (!response.ok) throw Object.assign(new Error('Mailbox HTTP ' + response.status), {status: response.status});
+                const result = response.status === 204 ? {} : await response.json();
+                if (!mailboxCurrent(session)) throw new Error('Sessão encerrada');
+                if (!result || typeof result !== 'object' || result.ok === false || result.success === false || result.error) throw new Error('Resposta inválida da caixa postal');
+                return result;
+            } finally {
+                clearTimeout(timer); session.controller.signal.removeEventListener('abort', abort);
+            }
+        }
+        function queueDeliveryAck(account, code, messageId) {
+            if (!validUUID(messageId)) return;
+            account.deliveryAcks = account.deliveryAcks || {};
+            const queue = account.deliveryAcks[code] || (account.deliveryAcks[code] = {});
+            if (!queue[messageId]) {
+                queue[messageId] = {messageId, createdAt: Date.now()};
+                try { saveLocalData(account); } catch (e) { delete queue[messageId]; throw e; }
+            } else saveLocalData(account);
+        }
+        function sendDeliveryAcks(account, code, connection) {
+            const conn = connection || window.appState.connections[code];
+            if (window.appState.currentUser !== account || !isFriend(code) || !usableConnection(conn)) return;
+            for (const ack of Object.values(account.deliveryAcks?.[code] || {})) {
+                if (ack.lastAttempt && Date.now() - ack.lastAttempt < 5000) continue;
+                ack.lastAttempt = Date.now();
+                safeSend(conn, {type: 'delivery_ack', messageId: ack.messageId});
+                // Compatibility with the previous HTML's direct-delivery ACK handler.
+                safeSend(conn, {type: 'message_ack', messageId: ack.messageId});
+            }
+        }
+        function clearDeliveryAck(code, messageId) {
+            if (!validUUID(messageId)) return;
+            const account = window.appState.currentUser, queue = account.deliveryAcks?.[code];
+            if (!queue?.[messageId]) return;
+            const ack = queue[messageId]; delete queue[messageId];
+            try { saveLocalData(account); } catch (e) { queue[messageId] = ack; throw e; }
+        }
+        function drainOutbox() {
+            const s = mailboxSession, account = window.appState.currentUser;
+            if (!account) return Promise.resolve();
+            // No HTTP or crypto operation can delay an already-open direct tunnel.
+            for (const friend of account.friends) {
+                sendPendingPeer(account, friend.code);
+                sendDeliveryAcks(account, friend.code);
+            }
+            if (!s?.ready || !mailboxCurrent(s) || navigator.onLine === false) return Promise.resolve();
+            if (s.draining) return s.draining;
+            s.draining = (async () => {
+                for (const friend of account.friends) {
+                    if (!mailboxCurrent(s)) return;
+                    if (usableConnection(window.appState.connections[friend.code])) continue;
+                    const profile = selectPublicProfile(friend.profile, true);
+                    const queued = (account.chats[friend.code] || []).filter(m => m.sender === 'me' && m.status !== 'delivered' && m.netPayload);
+                    if (!profile.mailboxId) {
+                        if (queued.length) document.getElementById('mailbox-status').textContent = 'Aguardando o amigo entrar online para trocar a chave pública. Mensagens salvas localmente.';
+                        continue;
+                    }
+                    for (const m of queued) {
+                        if (!mailboxCurrent(s)) return;
+                        if (m.status === 'delivered' || (m.nextCloudAttempt || 0) > Date.now()) continue;
+                        try {
+                            if (m.status === 'stored_server' && m.serverExpiresAt && m.serverExpiresAt <= Date.now()) setMessageState(account, friend.code, m, 'pending_local');
+                            const row = m.offlineEnvelope || await encryptMailbox(account, profile, m.netPayload, m.messageId);
+                            if (!mailboxCurrent(s) || m.status === 'delivered') continue;
+                            if (row.id !== m.messageId || row.recipient_id !== profile.mailboxId || row.sender_id !== account.mailboxId || typeof row.payload !== 'string') throw new Error('Envelope local inválido');
+                            m.offlineEnvelope = row; saveLocalData(account);
+                            if (usableConnection(window.appState.connections[friend.code])) { sendPendingPeer(account, friend.code); break; }
+                            // Worker v2 contract: ONLY id/sender_id/recipient_id/recipient_auth_hash/payload.
+                            const body = {id: row.id, sender_id: row.sender_id, recipient_id: row.recipient_id, recipient_auth_hash: row.recipient_auth_hash, payload: row.payload};
+                            const result = await mailboxFetch(s, '/message', {method: 'POST', body: JSON.stringify(body)});
+                            if (!mailboxCurrent(s)) return;
+                            if (result.id && result.id !== m.messageId) throw new Error('Confirmação de armazenamento inválida');
+                            const expiry = Number(result.expires_at);
+                            m.serverExpiresAt = Number.isFinite(expiry) && expiry > 0 ? (expiry < 1e12 ? expiry * 1000 : expiry) : null;
+                            m.cloudFailures = 0;
+                            // Retain a durable retry even when the API does not return a TTL.
+                            m.nextCloudAttempt = m.serverExpiresAt > Date.now() ? m.serverExpiresAt : Date.now() + 300000;
+                            setMessageState(account, friend.code, m, 'stored_server');
+                        } catch {
+                            if (!mailboxCurrent(s)) return;
+                            m.cloudFailures = Math.min(5, (m.cloudFailures || 0) + 1);
+                            m.nextCloudAttempt = Date.now() + Math.min(60000, 15000 * 2 ** (m.cloudFailures - 1));
+                            try { saveLocalData(account); } catch { /* The original message remains pending. */ }
+                            document.getElementById('mailbox-status').textContent = 'Caixa postal indisponível; mensagens preservadas neste dispositivo.';
+                            // An invalid item or another friend's outage must not starve the queue.
+                        }
+                    }
+                }
+            })().catch(() => {
+                if (mailboxCurrent(s)) document.getElementById('mailbox-status').textContent = 'Fila local preservada; nova tentativa automática.';
+            }).finally(() => { s.draining = null; });
+            return s.draining;
+        }
+        function sendPendingPeer(account, code) {
+            const conn = window.appState.connections[code];
+            if (!usableConnection(conn) || window.appState.currentUser !== account) return;
+            for (const m of account.chats[code] || []) {
+                if (m.sender === 'me' && m.status !== 'delivered' && m.netPayload && (!m.lastPeerAttempt || Date.now() - m.lastPeerAttempt > 5000)) {
+                    m.lastPeerAttempt = Date.now();
+                    safeSend(conn, {...m.netPayload, messageId: m.messageId});
+                }
+            }
+        }
+        function pollMailbox() {
+            const s = mailboxSession;
+            if (!s?.ready || !mailboxCurrent(s) || navigator.onLine === false) return Promise.resolve();
+            if (s.isCheckingMailbox) return s.polling;
+            s.isCheckingMailbox = true;
+            s.polling = (async () => {
+                let cursor = '', skipped = 0;
+                const visited = new Set();
+                for (let page = 0; page < 10; page++) {
+                    const result = await mailboxFetch(s, '/messages?recipient_id=' + encodeURIComponent(s.account.mailboxId) + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''), {}, true);
+                    const rows = Array.isArray(result) ? result : (result.messages || result.data || result.results);
+                    if (!Array.isArray(rows)) throw new Error('Lista de mensagens inválida');
+                    let deleted = 0;
+                    for (const row of rows) {
+                        if (!mailboxCurrent(s)) return;
+                        if (!row || !validUUID(row.id) || row.recipient_id !== s.account.mailboxId || visited.has(row.id)) { skipped++; continue; }
+                        visited.add(row.id);
+                        const friend = s.account.friends.find(f => f.profile?.mailboxId === row.sender_id);
+                        if (!friend || !validPublicKey(friend.profile.publicKey)) { skipped++; continue; }
+                        try {
+                            const existing = s.account.chats[friend.code]?.find(m => m.messageId === row.id);
+                            if (existing) {
+                                if (existing.sender !== 'friend') throw new Error('ID em conflito');
+                                // Already saved via PeerJS or a previous fetch. No duplicate decryption/bubble.
+                                saveLocalData(s.account);
+                                queueDeliveryAck(s.account, friend.code, row.id);
+                                sendDeliveryAcks(s.account, friend.code);
+                            } else {
+                                const payload = await decryptMailbox(s.account, friend.profile, row);
+                                if (!mailboxCurrent(s)) return;
+                                if (!payload || payload.messageId !== row.id) throw new Error('ID do conteúdo inválido');
+                                if (payload.type === 'receipt') {
+                                    // Read previously-created encrypted receipts, but do not create new ones.
+                                    if (!acknowledgeMessage(friend.code, payload.ackMessageId)) throw new Error('Recibo desconhecido');
+                                } else if (!receiveChatMessage(friend.code, payload, window.appState.connections[friend.code])) throw new Error('Conteúdo inválido');
+                            }
+                            if (!mailboxCurrent(s)) return;
+                            // Durable chat + durable pending ACK precede this authenticated deletion.
+                            await mailboxFetch(s, '/message/' + encodeURIComponent(row.id), {method: 'DELETE'}, true);
+                            deleted++;
+                        } catch { skipped++; } // Never delete on decryption/persistence failure.
+                    }
+                    const next = !Array.isArray(result) && result.next_cursor;
+                    if (typeof next === 'string' && next && next !== cursor) cursor = next;
+                    else if (deleted > 0 && rows.length) cursor = ''; // Supports capped APIs without cursors.
+                    else break;
+                }
+                if (mailboxCurrent(s)) document.getElementById('mailbox-status').textContent = skipped ? 'Alguns itens aguardam nova tentativa ou sincronização com o amigo.' : '';
+            })().catch(() => {
+                if (mailboxCurrent(s)) document.getElementById('mailbox-status').textContent = 'Caixa postal indisponível; nova tentativa automática.';
+            }).finally(() => { s.isCheckingMailbox = false; s.polling = null; });
+            return s.polling;
+        }
+        window.addEventListener('online', () => {
+            const account = window.appState.currentUser;
+            if (account) for (const chat of Object.values(account.chats || {})) for (const m of chat) if (m.status === 'pending_local') m.nextCloudAttempt = 0;
+            mailboxTick();
+        });
+        window.addEventListener('focus', mailboxTick);
+        window.addEventListener('pagehide', stopMailbox);
+        window.addEventListener('pageshow', e => { if (e.persisted && window.appState.currentUser) void startMailbox(window.appState.currentUser); });
+
+
+        function networkStatus(text) {
+            document.getElementById('network-status').textContent = text;
+            const ready = isCloudAccount() ? !!cloudSession && navigator.onLine !== false : !!window.appState.peer?.open;
+            document.getElementById('btn-connect-peer').disabled = !ready;
+            document.getElementById('btn-connect-peer').textContent = ready ? 'Enviar solicitação de amizade' : 'Reconectando à rede…';
+        }
+        function initPeerJS() {
+            const state = window.appState;
+            if (!state.currentUser) return;
+            if (!networkTimer) networkTimer = setInterval(maintainNetwork, 3000);
+            const old = state.peer;
+            state.peer = null;
+            if (old && !old.destroyed) old.destroy();
+            try {
+                const peer = new Peer('vortex-' + state.dailyCode, {
+                    debug: 1,
+                    config: {iceServers: [
+                        {urls: 'stun:stun.l.google.com:19302'},
+                        {urls: 'stun:stun1.l.google.com:19302'},
+                        {urls: 'stun:stun2.l.google.com:19302'},
+                        {urls: 'stun:global.stun.twilio.com:3478'}
+                    ]}
+                });
+                state.peer = peer;
+                networkStatus('Conectando…');
+                const current = () => state.peer === peer && !!state.currentUser;
+                peer.on('open', () => {
+                    if (!current()) return;
+                    networkStatus('Nó P2P Online');
+                    retryAt = {};
+                    maintainNetwork();
+                    mailboxTick(); // Also retrieve mail when signaling becomes ready.
+                });
+                peer.on('connection', conn => current() ? handleIncomingDataConnection(conn) : conn.close());
+                peer.on('call', call => current() ? handleIncomingMediaCall(call) : call.close());
+                peer.on('disconnected', () => {
+                    if (!current()) return;
+                    peerRetryAt = Date.now() + 1500;
+                    networkStatus('Reconectando…');
+                });
+                peer.on('close', () => {
+                    if (!current()) return;
+                    networkStatus('Rede desconectada');
+                    peerRetryAt = Date.now() + 3000;
+                });
+                peer.on('error', err => {
+                    if (!current()) return;
+                    console.warn('PeerJS:', err.type);
+                    if (err.type === 'peer-unavailable') {
+                        document.getElementById('add-friend-status').textContent = 'Contato offline. Tentaremos novamente automaticamente.';
+                        return;
+                    }
+                    if (err.type === 'unavailable-id') {
+                        networkStatus('Código em uso; tentando novamente…');
+                        peerRetryAt = Date.now() + 15000;
+                    } else {
+                        networkStatus('Reconectando…');
+                        peerRetryAt = Date.now() + 5000;
+                    }
+                });
+            } catch (e) {
+                peerRetryAt = Date.now() + 10000;
+                networkStatus('Rede indisponível; tentando novamente…');
+            }
+        }
+        function maintainNetwork() {
+            const s = window.appState;
+            if (!s.currentUser || navigator.onLine === false) return;
+            if (!s.peer || s.peer.destroyed) {
+                if (Date.now() >= peerRetryAt) initPeerJS();
+                return;
+            }
+            if (s.peer.disconnected) {
+                if (Date.now() >= peerRetryAt) {
+                    peerRetryAt = Date.now() + 10000;
+                    try { s.peer.reconnect(); } catch (e) { initPeerJS(); }
+                }
+                return;
+            }
+            if (!s.peer.open) return;
+            const codes = new Set([...s.currentUser.friends.map(f => f.code), ...(isCloudAccount() ? [] : Object.keys(s.currentUser.outgoingRequests))]);
+            codes.forEach(code => connectTo(code));
+            Object.values(s.connections).forEach(conn => {
+                if (!conn.open) return;
+                if (Date.now() - conn.lastSeen > 45000) { conn.close(); return; }
+                safeSend(conn, {type: 'ping'});
+            });
+        }
+        function safeSend(conn, data) {
+            if (!usableConnection(conn)) return false;
+            try { conn.send(data); return true; } catch (e) { conn.close(); return false; }
+        }
+        function connectTo(code) {
+            const s = window.appState;
+            if (!s.peer?.open || !validPeerCode(code) || code === s.dailyCode || s.connections[code] || Date.now() < (retryAt[code] || 0)) return;
+            try {
+                setupDataConnectionEvents(s.peer.connect('vortex-' + code, {reliable: true}), true);
+            } catch (e) { retryAt[code] = Date.now() + 5000; }
+        }
+        function stopNetwork() {
+            clearInterval(networkTimer); networkTimer = null;
+            window.endCall();
+            const s = window.appState;
+            const peer = s.peer; s.peer = null;
+            Object.values(s.connections).forEach(c => { clearTimeout(c.openTimer); c.close(); });
+            s.connections = {};
+            if (peer) peer.destroy();
+            retryAt = {}; retryCount = {};
+        }
+        window.addEventListener('online', () => { retryAt = {}; peerRetryAt = 0; maintainNetwork(); });
+        window.addEventListener('pagehide', stopNetwork);
+        window.addEventListener('pageshow', e => { if (e.persisted && window.appState.currentUser) initPeerJS(); });
+
+
+        window.logout = (revoke = true) => {
+            const session = cloudSession;
+            cloudSession = null;
+            if (session) {
+                clearInterval(session.timer); session.controller.abort();
+                if (revoke) void fetch(VORTEX_MAILBOX_URL + '/auth/logout', {method: 'POST', headers: {Authorization: 'Bearer ' + session.token}, credentials: 'omit', redirect: 'error', keepalive: true}).catch(() => {});
+            }
+            stopMailbox();
+            stopNetwork();
+            window.appState.currentUser = null;
+            if (window.appState.peer) {
+                window.appState.peer.destroy();
+                window.appState.peer = null;
+            }
+            if (window.appState.localStream) {
+                window.appState.localStream.getTracks().forEach(t => t.stop());
+                window.appState.localStream = null;
+            }
+            window.appState.connections = {};
+            window.appState.calls = {};
+            window.appState.activeChatId = null;
+            window.appState.activeCallCode = null;
+
+            closeModal('settingsModal');
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('chat-header').style.opacity = '0';
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            document.getElementById('messages-container').classList.add('hidden');
+            document.getElementById('message-input-area').classList.add('hidden');
+            document.getElementById('right-panel').classList.add('hidden');
+            document.getElementById('video-area').classList.add('hidden');
+            hideVoiceCallUI();
+            setCallActiveUI(false);
+
+            renderAccounts();
+        };
+
+        function setupDataConnectionEvents(conn, isInitiator) {
+            const s = window.appState, owner = s.currentUser;
+            const code = conn.peer.replace('vortex-', '');
+            if (!validPeerCode(code) || code === s.dailyCode) { conn.close(); return; }
+            conn.initiator = isInitiator;
+            const existing = s.connections[code];
+            // Both peers choose the connection initiated by the smaller code.
+            if (existing && existing !== conn) {
+                const preferOutgoing = s.dailyCode < code;
+                if (existing.initiator === preferOutgoing || conn.initiator !== preferOutgoing) { conn.close(); return; }
+                s.connections[code] = conn;
+                clearTimeout(existing.openTimer);
+                existing.close();
+            } else s.connections[code] = conn;
+            const current = () => s.currentUser === owner && s.connections[code] === conn;
+            conn.openTimer = setTimeout(() => { if (current() && !conn.open) failed(); }, 12000);
+            function failed() {
+                clearTimeout(conn.openTimer); clearTimeout(conn.authTimer);
+                if (!current()) return;
+                delete s.connections[code];
+                retryCount[code] = (retryCount[code] || 0) + 1;
+                retryAt[code] = Date.now() + Math.min(30000, 1500 * 2 ** Math.min(retryCount[code], 5)) + Math.random() * 1000;
+                updateFriendStatus(code, 'Offline');
+                if (s.activeCallCode === code || s.pendingCall?.peer === conn.peer) window.endCall();
+                conn.close();
+            }
+            function ready() {
+                if (!current()) return;
+                conn.lastSeen = Date.now(); retryCount[code] = 0;
+                if (isFriend(code)) {
+                    safeSend(conn, {type: 'profile_sync', data: publicProfile(code)});
+                    updateFriendStatus(code, 'Online (Túnel Ativo)');
+                    flushPendingMessages(code, conn);
+                }
+                if (!owner.cloudUserId) {
+                    const request = owner.outgoingRequests[code];
+                    if (request) safeSend(conn, {type: 'friend_request', requestId: request.id, data: selectPublicProfile(owner)});
+                }
+            }
+            conn.on('open', () => {
+                clearTimeout(conn.openTimer);
+                if (!current()) { conn.close(); return; }
+                conn.lastSeen = Date.now();
+                if (owner.cloudUserId) {
+                    conn.authChallenge = randomHex(32);
+                    conn.authTimer = setTimeout(() => { if (current() && !conn.authenticated) failed(); }, 30000);
+                    try { conn.send({type: 'peer_challenge', challenge: conn.authChallenge}); } catch { failed(); }
+                } else ready();
+            });
+            conn.on('data', msg => {
+                if (!current() || !msg || typeof msg !== 'object') return;
+                if (owner.cloudUserId && ['peer_challenge','peer_proof'].includes(msg.type)) {
+                    void cloudPeerHandshake(conn, code, msg, ready, current); return;
+                }
+                if (!usableConnection(conn)) return;
+                conn.lastSeen = Date.now();
+                handleP2PMessage(code, msg, conn);
+            });
+            conn.on('close', failed);
+            conn.on('error', failed);
+        }
+        function handleIncomingDataConnection(conn) { setupDataConnectionEvents(conn, false); }
+        function addAcceptedFriend(code, profile) {
+            const u = window.appState.currentUser;
+            if (!isFriend(code)) u.friends.push({code, profile: selectPublicProfile(profile, true) || {name: 'Nó ' + code, badges: []}});
+            saveLocalData(); renderFriendsList();
+            const conn = window.appState.connections[code];
+            if (usableConnection(conn)) {
+                safeSend(conn, {type: 'profile_sync', data: publicProfile(code)});
+                flushPendingMessages(code, conn);
+            }
+        }
+        window.addFriendByCode = () => {
+            if (isCloudAccount()) return cloudFriendRequest();
+            const code = document.getElementById('friend-code-input').value.trim();
+            const status = document.getElementById('add-friend-status');
+            if (!/^\d{8}$/.test(code)) { status.textContent = 'Use exatamente 8 dígitos.'; return; }
+            if (code === window.appState.dailyCode) { status.textContent = 'Este é o seu código.'; return; }
+            if (isFriend(code)) { status.textContent = 'Este contato já é seu amigo.'; connectTo(code); return; }
+            const u = window.appState.currentUser;
+            if (!u.outgoingRequests[code]) u.outgoingRequests[code] = {id: generateUUID()};
+            saveLocalData(); renderRequests(); retryAt[code] = 0;
+            connectTo(code);
+            safeSend(window.appState.connections[code], {type: 'friend_request', requestId: u.outgoingRequests[code].id, data: selectPublicProfile(u)});
+            status.textContent = 'Solicitação pendente. Aguardando o contato ficar online e aceitar.';
+        };
+        window.switchConnectionTab = tab => {
+            ['add','pending'].forEach(name => {
+                document.getElementById('connection-' + name).classList.toggle('hidden', tab !== name);
+                const button = document.getElementById('connection-tab-' + name);
+                button.className = 'flex-1 py-2 rounded-lg ' + (name === tab ? 'bg-white/10 text-white' : 'text-gray-400');
+                button.setAttribute('aria-selected', String(name === tab));
+            });
+            renderRequests();
+        };
+        function renderRequests() {
+            const box = document.getElementById('friend-requests'); box.replaceChildren();
+            const u = window.appState.currentUser;
+            if (!u) return;
+            const pending = Object.keys(u.requests || {}).length + Object.keys(u.outgoingRequests || {}).length;
+            document.getElementById('pending-count').textContent = pending ? '(' + pending + ')' : '';
+            document.getElementById('pending-badge').textContent = pending ? '(' + pending + ')' : '';
+            if (!pending) { const empty = document.createElement('p'); empty.className = 'text-sm text-gray-400 text-center py-6'; empty.textContent = 'Nenhuma solicitação pendente.'; box.appendChild(empty); }
+            Object.entries(u.requests || {}).forEach(([code, request]) => {
+                const row = document.createElement('div'); row.className = 'rounded-xl bg-white/5 p-3 text-sm';
+                const label = document.createElement('p'); label.textContent = (request.profile?.name || code) + ' quer ser seu amigo'; row.appendChild(label);
+                ['Aceitar','Recusar'].forEach((text, index) => {
+                    const btn = document.createElement('button'); btn.textContent = text;
+                    btn.className = 'mt-2 mr-3 font-bold ' + (index ? 'text-red-400' : 'text-green-400');
+                    btn.onclick = () => decideFriend(code, index === 0); row.appendChild(btn);
+                }); box.appendChild(row);
+            });
+            Object.keys(u.outgoingRequests || {}).forEach(code => {
+                const row = document.createElement('p'); row.className = 'text-xs text-gray-400'; row.textContent = (u.outgoingRequests[code].profile?.name || u.outgoingRequests[code].permanentCode || code) + ': aguardando aceitação'; box.appendChild(row);
+            });
+        }
+        function decideFriend(code, accepted) {
+            if (isCloudAccount()) return cloudDecideFriend(code, accepted);
+            const u = window.appState.currentUser, request = u.requests[code];
+            if (!request) return;
+            u.requestDecisions[code] = {id: request.id, accepted};
+            delete u.requests[code];
+            if (accepted) {
+                // A crossed request is also fulfilled by this explicit acceptance.
+                delete u.outgoingRequests[code];
+                addAcceptedFriend(code, request.profile);
+            }
+            saveLocalData(); renderRequests();
+            safeSend(window.appState.connections[code], {type: 'friend_response', requestId: request.id, accepted, data: publicProfile(code)});
+        }
+        function handleControlMessage(code, msg, conn) {
+            if (isCloudAccount() && ['friend_request','friend_response'].includes(msg.type)) return true;
+            const u = window.appState.currentUser;
+            if (msg.type === 'ping') { safeSend(conn, {type: 'pong'}); return true; }
+            if (msg.type === 'pong') return true;
+            if (msg.type === 'call_end') {
+                const call = window.appState.pendingCall || window.appState.calls[code];
+                if (call?.peer === 'vortex-' + code && call.metadata?.callId === msg.callId) window.endCall(false);
+                return true;
+            }
+            if (msg.type === 'friend_request') {
+                if (typeof msg.requestId !== 'string' || msg.requestId.length > 100) return true;
+                const previous = u.requestDecisions[code];
+                if (isFriend(code) || previous?.id === msg.requestId) {
+                    safeSend(conn, {type: 'friend_response', requestId: msg.requestId, accepted: isFriend(code) || previous.accepted, data: publicProfile(code)});
+                } else {
+                    u.requests[code] = {id: msg.requestId, profile: selectPublicProfile(msg.data)}; saveLocalData(); renderRequests();
+                }
+                return true;
+            }
+            if (msg.type === 'friend_response') {
+                if (u.outgoingRequests[code]?.id !== msg.requestId) return true;
+                delete u.outgoingRequests[code];
+                if (msg.accepted === true) { delete u.requests[code]; addAcceptedFriend(code, msg.data); }
+                else customAlert('O contato ' + code + ' recusou sua solicitação.');
+                saveLocalData(); renderRequests(); return true;
+            }
+            return false;
+        }
+
+
+        function handleP2PMessage(fromCode, msg, conn) {
+            if (isCloudAccount() && !usableConnection(conn)) return;
+            if (!msg || typeof msg !== 'object') return;
+            if (handleControlMessage(fromCode, msg, conn)) return;
+            if (!isFriend(fromCode)) return;
+            try {
+                if (msg.type === 'profile_sync') {
+                    const friend = window.appState.currentUser.friends.find(f => f.code === fromCode);
+                    const next = selectPublicProfile(msg.data, true);
+                    // Pin the first identity exchanged with an accepted friend.
+                    if (friend.profile?.mailboxId) {
+                        const old = friend.profile;
+                        if (next.mailboxId && (old.mailboxId !== next.mailboxId || old.mailboxAuthHash !== next.mailboxAuthHash || old.publicKey.x !== next.publicKey.x || old.publicKey.y !== next.publicKey.y)) {
+                            document.getElementById('mailbox-status').textContent = 'A identidade de um amigo mudou. Os dados anteriores foram preservados.';
+                        }
+                        Object.assign(next, {mailboxId: old.mailboxId, mailboxAuthHash: old.mailboxAuthHash, publicKey: old.publicKey});
+                    }
+                    friend.profile = next;
+                    saveLocalData(); renderFriendsList();
+                    if (window.appState.activeChatId === fromCode) {
+                        renderRightPanelProfile(next);
+                        document.getElementById('chat-title').innerText = next.name;
+                    }
+                    if (!msg.isReply) safeSend(conn, {type: 'profile_sync', data: publicProfile(fromCode), isReply: true});
+                    mailboxTick();
+                } else if (msg.type === 'chat' || msg.type === 'gif') {
+                    receiveChatMessage(fromCode, msg, conn);
+                } else if (msg.type === 'message_ack' || msg.type === 'delivery_ack') {
+                    if (acknowledgeMessage(fromCode, msg.messageId)) safeSend(conn, {type: 'delivery_ack_received', messageId: msg.messageId});
+                } else if (msg.type === 'delivery_ack_received') {
+                    clearDeliveryAck(fromCode, msg.messageId);
+                } else if (msg.type === 'sound' && !window.appState.isDeafened) playInternalSound(msg.soundName);
+            } catch { console.warn('Mensagem não confirmada: não foi possível validar ou salvar localmente.'); }
+        }
+
+        window.switchMainView = (view) => {
+            const btnF = document.getElementById('btn-view-friends');
+            const btnS = document.getElementById('btn-view-spaces');
+            const viewF = document.getElementById('sidebar-friends');
+            const viewS = document.getElementById('sidebar-spaces');
+            
+            if (view === 'friends') {
+                btnF.className = "px-6 py-2 rounded-full bg-white/10 text-white text-sm font-semibold transition-all";
+                btnS.className = "px-6 py-2 rounded-full text-gray-400 hover:text-white text-sm font-semibold transition-all";
+                viewF.classList.remove('hidden');
+                viewS.classList.add('hidden');
+            } else {
+                btnS.className = "px-6 py-2 rounded-full bg-white/10 text-white text-sm font-semibold transition-all";
+                btnF.className = "px-6 py-2 rounded-full text-gray-400 hover:text-white text-sm font-semibold transition-all";
+                viewS.classList.remove('hidden');
+                viewF.classList.add('hidden');
+            }
+        };
+
+        function renderFriendsList() {
+            const list = document.getElementById('friends-list');
+            list.innerHTML = '';
+            
+            window.appState.currentUser.friends.forEach(friend => {
+                const btn = document.createElement('button');
+                btn.id = `friend-btn-${friend.code}`;
+                btn.className = 'w-full flex items-center p-3 bg-black/20 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all group relative overflow-hidden';
+                btn.onclick = () => openChat(friend.code, friend.profile);
+                
+                const isOnline = usableConnection(window.appState.connections[friend.code]);
+                const statusColor = isOnline ? 'bg-green-400' : 'bg-gray-600';
+                const statusText = isOnline ? 'Online (Túnel Ativo)' : 'Offline';
+
+                btn.innerHTML = `
+                    <div class="relative mr-4 shrink-0">
+                        <img src="${escapeHTML((isOnline && safeImageURL(friend.profile.avatar)) || DEFAULT_AVATAR)}" class="w-10 h-10 rounded-lg object-cover border border-white/5">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border border-[#0f172a] ${statusColor}" id="status-dot-${friend.code}"></div>
+                    </div>
+                    <div class="flex-1 text-left truncate">
+                        <div class="text-sm font-bold truncate text-white">${escapeHTML(friend.profile.name)}</div>
+                        <div class="text-[10px] truncate text-gray-500 font-mono tracking-wider" id="status-text-${friend.code}">${statusText}</div>
+                    </div>
+                `;
+                list.appendChild(btn);
+            });
+        }
+
+        function updateFriendStatus(code, status) {
+            if (window.appState.currentUser) {
+                renderFriendsList();
+                const friend = window.appState.currentUser.friends.find(f => f.code === code);
+                if (friend && window.appState.activeChatId === code) renderRightPanelProfile(friend.profile);
+                if (!usableConnection(window.appState.connections[code]) && window.appState.activeChatId === code) {
+                    document.querySelectorAll('#messages-container [data-sender="friend"]').forEach(row => { const avatar = row.querySelector('img'); if (avatar) avatar.src = DEFAULT_AVATAR; });
+                }
+            }
+            const textEl = document.getElementById(`status-text-${code}`);
+            const dotEl = document.getElementById(`status-dot-${code}`);
+            
+            if (textEl) textEl.innerText = status;
+            if (dotEl) {
+                dotEl.className = `absolute -bottom-1 -right-1 w-3 h-3 rounded-full border border-[#0f172a] ${status.includes('Online') ? 'bg-green-400' : 'bg-gray-600'}`;
+            }
+        }
+
+        window.openChat = (code, profile) => {
+            if (!isFriend(code)) return;
+            connectTo(code);
+            window.appState.activeChatId = code;
+            
+            const btn = document.getElementById(`friend-btn-${code}`);
+            if(btn) btn.classList.remove('ring-2', 'ring-cyan-500', 'bg-white/10');
+
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('chat-header').style.opacity = '1';
+            document.getElementById('messages-container').classList.remove('hidden');
+            document.getElementById('message-input-area').classList.remove('hidden');
+            document.getElementById('right-panel').classList.remove('hidden');
+            
+            document.getElementById('chat-title').innerText = profile.name;
+            
+            const container = document.getElementById('messages-container');
+            container.innerHTML = `
+                <div class="text-center my-8">
+                    <div class="w-20 h-20 bg-vortex/10 border border-vortex/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-3xl text-vortex"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">Túnel Seguro Estabelecido com ${escapeHTML(profile.name)}</h4>
+                    <p class="text-xs text-gray-500 max-w-sm mx-auto font-light">Todas as mensagens, áudios e vídeos são transmitidos ponta-a-ponta via WebRTC. Histórico persistido localmente.</p>
+                </div>
+            `;
+            
+            // Render stored messages for this chat
+            if (!window.appState.currentUser.chats[code]) {
+                window.appState.currentUser.chats[code] = [];
+            }
+            window.appState.currentUser.chats[code].forEach(m => {
+                appendMessageToDOM(m.text, m.sender, m.isHtml, m.delivered !== false, m.id);
+            });
+
+            renderRightPanelProfile(profile);
+        };
+
+        function renderRightPanelProfile(profile) {
+            profile = displayedProfile(profile);
+            const badgesHtml = (profile.badges || []).map(b => `
+                <div class="flex items-center bg-black/40 border border-white/10 rounded px-2 py-1 cursor-pointer hover:bg-white/10 transition-colors group relative" data-space-code="${escapeHTML(b.code)}" data-space-name="${escapeHTML(b.name)}">
+                    <i class="fas ${/^fa-[a-z0-9-]+$/.test(b.icon) ? b.icon : 'fa-star'} text-yellow-400 mr-2 text-xs"></i>
+                    <span class="text-xs text-gray-300">${escapeHTML(b.name)}</span>
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black text-[10px] text-white px-2 py-1 rounded hidden group-hover:block whitespace-nowrap whitespace-nowrap border border-white/20">Acessar Espaço</div>
+                </div>
+            `).join('');
+
+            document.getElementById('friend-profile-content').innerHTML = `
+                <div class="h-32 bg-gradient-to-r from-cyan-900 to-indigo-900 w-full bg-cover bg-center" id="friend-profile-banner"></div>
+                <div class="px-6 pb-6 relative">
+                    <img src="${escapeHTML(safeImageURL(profile.avatar) || DEFAULT_AVATAR)}" class="w-20 h-20 rounded-xl object-cover absolute -top-10 left-6 border-4 border-[#141923] shadow-lg">
+                    <div class="mt-14">
+                        <h3 class="font-bold text-xl text-white tracking-wide">${escapeHTML(profile.name)}</h3>
+                        
+                        ${badgesHtml ? `
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            ${badgesHtml}
+                        </div>
+                        ` : ''}
+
+                        <p class="text-sm text-gray-400 mt-4 font-light bg-black/20 p-3 rounded-lg border border-white/5">${escapeHTML(profile.bio || 'Membro da rede Vortex.')}</p>
+                        
+                        ${profile.gameFav || profile.gamePlaying ? `
+                        <div class="mt-6 border-t border-white/10 pt-4 space-y-3">
+                            <h4 class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">Telemetria</h4>
+                            ${profile.gamePlaying ? `
+                            <div class="flex items-center bg-white/5 p-2 rounded-lg border border-white/5">
+                                <i class="fas fa-gamepad text-vortex mr-3"></i>
+                                <div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Executando</div>
+                                    <div class="text-sm font-semibold text-white">${escapeHTML(profile.gamePlaying)}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${profile.gameFav ? `
+                            <div class="flex items-center bg-white/5 p-2 rounded-lg border border-white/5">
+                                <i class="fas fa-star text-yellow-500 mr-3"></i>
+                                <div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Módulo Favorito</div>
+                                    <div class="text-sm font-semibold text-white">${escapeHTML(profile.gameFav)}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('friend-profile-banner').style.backgroundImage = safeImageURL(profile.banner) ? `url("${safeImageURL(profile.banner).replace(/"/g, '%22')}")` : '';
+            document.getElementById('friend-profile-content').querySelectorAll('[data-space-code]').forEach(el => {
+                el.onclick = () => promptJoinSpace(el.dataset.spaceCode, el.dataset.spaceName);
+            });
+        }
+
+        window.handleChatInput = (e) => {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        window.sendMessage = () => {
+            const input = document.getElementById('chat-input'), text = input.value.trim();
+            if (!text || !isFriend(window.appState.activeChatId)) return;
+            if (text.length > 8000) return customAlert('Use até 8.000 caracteres por mensagem.');
+            if (queueMessage({type: 'chat', text})) input.value = '';
+        };
+        window.sendGIF = url => {
+            if (!isFriend(window.appState.activeChatId) || !safeImageURL(url)) return;
+            if (queueMessage({type: 'gif', url})) closeModal('gifModal');
+        };
+        function safeImageURL(value) {
+            try { const u = new URL(value); return u.protocol === 'https:' || u.protocol === 'http:' ? u.href : ''; } catch { return ''; }
+        }
+        function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c])); }
+        function gifHTML(url) { return `<img src="${escapeHTML(safeImageURL(url))}" class="max-w-[250px] rounded-xl mt-2 shadow-lg border border-white/10" alt="GIF">`; }
+        function queueMessage(payload) {
+            const code = window.appState.activeChatId;
+            payload.messageId = generateUUID(); payload.sentAt = Date.now();
+            try {
+                const message = storeMessage(code, payload.type === 'gif' ? gifHTML(payload.url) : payload.text, 'me', payload.type === 'gif', false, payload);
+                displayMessage(message.text, 'me', message.isHtml, false, message.messageId);
+                flushPendingMessages(code);
+                return true;
+            } catch { customAlert('Não foi possível salvar a mensagem neste dispositivo. Libere espaço e tente novamente.'); return false; }
+        }
+        function storeMessage(friendCode, text, sender, isHtml, delivered = true, netPayload = null) {
+            const account = window.appState.currentUser;
+            const chat = account.chats[friendCode] || (account.chats[friendCode] = []);
+            const messageId = netPayload?.messageId || generateUUID();
+            const existing = chat.find(m => m.messageId === messageId);
+            if (existing) { saveLocalData(account); return existing; }
+            const message = {id: messageId, messageId, sender, text, isHtml, time: netPayload?.sentAt || Date.now(),
+                delivered, status: delivered ? 'delivered' : 'pending_local', netPayload};
+            chat.push(message);
+            try { saveLocalData(account); } catch (e) { chat.pop(); throw e; }
+            return message;
+        }
+        function setMessageState(account, code, message, status) {
+            // An in-flight POST must never overwrite a receipt arriving over PeerJS.
+            if (message.status === 'delivered' && status !== 'delivered') return;
+            const old = {status: message.status, delivered: message.delivered};
+            message.status = status; message.delivered = status === 'delivered';
+            try { saveLocalData(account); } catch (e) { Object.assign(message, old); throw e; }
+            if (window.appState.currentUser === account && window.appState.activeChatId === code) {
+                const icon = document.querySelector(`[data-msg-id="${message.messageId}"] .msg-delivery-icon`);
+                if (icon) { const info = messageStateInfo(message.status); icon.className = info.className; icon.title = info.title; }
+            }
+        }
+        function messageStateInfo(status) {
+            const items = {pending_local: ['clock', 'Aguardando envio / confirmação'], stored_server: ['cloud', 'Criptografada na caixa postal; aguardando entrega'], delivered: ['check', 'Recebimento confirmado']};
+            const [icon, title] = items[status] || items.pending_local;
+            return {className: `fas fa-${icon} text-gray-400 text-[10px] ml-2 msg-delivery-icon`, title};
+        }
+        function receiveChatMessage(code, payload, conn) {
+            if (!isFriend(code) || !['chat','gif'].includes(payload.type)) return false;
+            if (payload.messageId && !validUUID(payload.messageId)) return false;
+            if (payload.type === 'chat' && (typeof payload.text !== 'string' || payload.text.length > 8000)) return false;
+            if (payload.type === 'gif' && (typeof payload.url !== 'string' || payload.url.length > 4000 || !safeImageURL(payload.url))) return false;
+            // Legacy peers can still send, but only updated peers provide cross-transport deduplication.
+            payload = {...payload, messageId: payload.messageId || generateUUID()};
+            const account = window.appState.currentUser;
+            const duplicate = account.chats[code]?.some(m => m.messageId === payload.messageId);
+            const text = payload.type === 'gif' ? gifHTML(payload.url) : payload.text;
+            const stored = storeMessage(code, text, 'friend', payload.type === 'gif', true, payload);
+            // storeMessage persists synchronously before either ACK or DELETE is allowed.
+            if (!duplicate) {
+                if (window.appState.activeChatId === code) displayMessage(stored.text, 'friend', stored.isHtml, true, stored.messageId);
+                else document.getElementById(`friend-btn-${code}`)?.classList.add('ring-2', 'ring-cyan-500', 'bg-white/10');
+            }
+            queueDeliveryAck(account, code, payload.messageId);
+            sendDeliveryAcks(account, code, conn);
+            return true;
+        }
+        function acknowledgeMessage(code, messageId) {
+            if (!validUUID(messageId)) return false;
+            const account = window.appState.currentUser;
+            const m = account.chats[code]?.find(m => m.messageId === messageId && m.sender === 'me');
+            if (!m) return false;
+            setMessageState(account, code, m, 'delivered');
+            return true;
+        }
+        function flushPendingMessages(code, conn) {
+            const account = window.appState.currentUser;
+            if (account && code) { sendPendingPeer(account, code); sendDeliveryAcks(account, code, conn); }
+            void drainOutbox();
+        }
+
+
+        function displayMessage(text, sender, isHtml = false, delivered = true, msgId = null) {
+            appendMessageToDOM(text, sender, isHtml, delivered, msgId);
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendMessageToDOM(text, sender, isHtml = false, delivered = true, msgId = null) {
+            const container = document.getElementById('messages-container');
+            const div = document.createElement('div');
+            div.className = 'flex w-full ' + (sender === 'me' ? 'justify-end' : 'justify-start');
+            if (msgId) div.dataset.msgId = msgId;
+            div.dataset.sender = sender;
+            
+            const profile = sender === 'me' ? window.appState.currentUser : (window.appState.currentUser.friends.find(f => f.code === window.appState.activeChatId)?.profile || { name: 'Conexão', avatar: '' });
+            const name = sender === 'me' ? 'Você' : profile.name;
+            const avatar = sender === 'me' || usableConnection(window.appState.connections[window.appState.activeChatId]) ? (safeImageURL(profile.avatar) || DEFAULT_AVATAR) : DEFAULT_AVATAR;
+            
+            let contentHTML = escapeHTML(text);
+            if (isHtml) {
+                // Keep legacy GIF history without executing arbitrary stored markup.
+                const parsed = new DOMParser().parseFromString(text, 'text/html');
+                const image = parsed.querySelector('img');
+                contentHTML = image && safeImageURL(image.getAttribute('src')) ? gifHTML(image.getAttribute('src')) : escapeHTML(text);
+            }
+
+            const message = window.appState.currentUser.chats[window.appState.activeChatId]?.find(m => m.messageId === msgId);
+            const info = messageStateInfo(message?.status || (delivered ? 'delivered' : 'pending_local'));
+            const pendingIcon = sender === 'me' ? `<i class="${info.className}" title="${info.title}"></i>` : '';
+
+            div.innerHTML = `
+                <div class="flex max-w-[75%] ${sender === 'me' ? 'flex-row-reverse' : 'flex-row'} items-end group">
+                    <img src="${escapeHTML(avatar)}" class="w-8 h-8 rounded-lg object-cover shrink-0 shadow-md ${sender === 'me' ? 'ml-3' : 'mr-3'} border border-white/10">
+                    <div class="flex flex-col ${sender === 'me' ? 'items-end' : 'items-start'}">
+                        <span class="text-[10px] text-gray-500 font-bold mb-1 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">${escapeHTML(name)}</span>
+                        <div class="px-4 py-3 text-sm rounded-2xl ${sender === 'me' ? 'bg-vortex-dark text-white rounded-br-sm shadow-lg' : 'bg-white/10 text-gray-100 rounded-bl-sm border border-white/10'} break-words leading-relaxed font-light flex items-center">
+                            <span>${contentHTML}</span>${pendingIcon}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        async function getAudioDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const inSelect = document.getElementById('audio-input-select');
+                const outSelect = document.getElementById('audio-output-select');
+                
+                inSelect.innerHTML = '<option value="default">Padrão do Sistema</option>';
+                outSelect.innerHTML = '<option value="default">Padrão do Sistema</option>';
+                
+                let inCount = 1; let outCount = 1;
+
+                devices.forEach(d => {
+                    if (d.kind === 'audioinput' && d.deviceId !== 'default') {
+                        const opt = document.createElement('option');
+                        opt.value = d.deviceId; opt.text = d.label || `Microfone ${inCount++}`;
+                        inSelect.appendChild(opt);
+                    } else if (d.kind === 'audiooutput' && d.deviceId !== 'default') {
+                        const opt = document.createElement('option');
+                        opt.value = d.deviceId; opt.text = d.label || `Alto-falante ${outCount++}`;
+                        outSelect.appendChild(opt);
+                    }
+                });
+            } catch(e) {
+                console.warn("Media devices config error", e);
+            }
+        }
+
+        window.setVoiceMod = (type) => {
+            window.appState.voiceModType = type;
+            // Visual Update
+            ['none', 'radio', 'deep', 'alien'].forEach(t => {
+                document.getElementById('mod-' + t).classList.remove('bg-vortex/30', 'border-vortex');
+                document.getElementById('mod-' + t).classList.add('bg-white/5', 'border-white/10');
+            });
+            document.getElementById('mod-' + type).classList.remove('bg-white/5', 'border-white/10');
+            document.getElementById('mod-' + type).classList.add('bg-vortex/30', 'border-vortex');
+        };
+
+        function applyVoiceModifier(stream) {
+            if (window.appState.voiceModType === 'none' || !stream.getAudioTracks().length) return stream;
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaStreamSource(stream);
+                const destination = audioCtx.createMediaStreamDestination();
+
+                if (window.appState.voiceModType === 'radio') {
+                    const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+                    const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2500;
+                    const dist = audioCtx.createWaveShaper();
+                    dist.curve = new Float32Array([-1, 1]); // Simple clip
+                    source.connect(hp); hp.connect(dist); dist.connect(lp); lp.connect(destination);
+                } else if (window.appState.voiceModType === 'deep') {
+                    const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 400;
+                    source.connect(lp); lp.connect(destination);
+                } else if (window.appState.voiceModType === 'alien') {
+                    const osc = audioCtx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 40;
+                    const gain = audioCtx.createGain();
+                    source.connect(gain); osc.connect(gain.gain); gain.connect(destination); osc.start();
+                    window.appState.voiceOscillator = osc;
+                }
+
+                const audioTrack = destination.stream.getAudioTracks()[0];
+                return new MediaStream([audioTrack, ...stream.getVideoTracks()]);
+            } catch (e) {
+                console.error("DSP Error:", e);
+                return stream;
+            }
+        }
+
+        async function captureCallMedia(type) {
+            const device = document.getElementById('audio-input-select').value;
+            return type === 'screen'
+                ? navigator.mediaDevices.getDisplayMedia({video: true, audio: true})
+                : navigator.mediaDevices.getUserMedia({audio: device && device !== 'default' ? {deviceId: {exact: device}} : true, video: type === 'video'});
+        }
+        function useCallStream(stream, type, code) {
+            const s = window.appState;
+            s.rawLocalStream = stream;
+            s.localStream = applyVoiceModifier(stream);
+            s.localStream.getAudioTracks().forEach(t => t.enabled = !s.isMuted);
+            document.getElementById('remote-video').muted = s.isDeafened;
+            if (type === 'voice') showVoiceCallUI(code);
+            else {
+                document.getElementById('video-area').classList.remove('hidden');
+                document.getElementById('local-video').srcObject = s.localStream;
+            }
+            if (type === 'screen') stream.getVideoTracks().forEach(t => t.addEventListener('ended', () => window.endCall()));
+            return s.localStream;
+        }
+        async function handleOutgoingMediaCall(streamType) {
+            const s = window.appState, code = s.activeChatId;
+            if (!code || s.activeCallCode || s.pendingCall || s.mediaToken) return;
+            if (!isFriend(code) || !usableConnection(s.connections[code]) || !s.peer?.open) return customAlert('Aguarde o contato ficar online para chamar.');
+            const token = {}; s.mediaToken = token; s.activeCallCode = code; setCallActiveUI(true);
+            try {
+                const stream = await captureCallMedia(streamType);
+                if (s.mediaToken !== token) { stream.getTracks().forEach(t => t.stop()); return; }
+                const local = useCallStream(stream, streamType, code);
+                const call = s.peer.call('vortex-' + code, local, {metadata: {streamType, callId: generateUUID()}});
+                if (!call) throw new Error('Chamada indisponível');
+                setupMediaCallEvents(call);
+            } catch (e) {
+                if (s.mediaToken === token) { window.endCall(); customAlert('Não foi possível iniciar a chamada. Verifique a conexão e a permissão de mídia.'); }
+            }
+        }
+        window.startVoiceCall = () => handleOutgoingMediaCall('voice');
+        window.startVideoCall = () => handleOutgoingMediaCall('video');
+        window.startScreenShare = () => handleOutgoingMediaCall('screen');
+        function handleIncomingMediaCall(call) {
+            const s = window.appState, code = call.peer.replace('vortex-', '');
+            if (!isFriend(code) || (isCloudAccount() && !usableConnection(s.connections[code])) || s.activeCallCode || s.pendingCall || s.mediaToken) {
+                safeSend(s.connections[code], {type: 'call_end', callId: call.metadata?.callId});
+                call.close(); return;
+            }
+            s.pendingCall = call;
+            const friend = s.currentUser.friends.find(f => f.code === code);
+            const type = call.metadata?.streamType || 'voice';
+            document.getElementById('incoming-call-name').textContent = (friend.profile.name || code) + ' — ' + ({voice: 'chamada de voz', video: 'chamada de vídeo', screen: 'compartilhamento de tela'}[type] || 'chamada');
+            document.getElementById('accept-call').disabled = false;
+            openModal('incomingCallModal');
+            document.getElementById('accept-call').focus();
+            call.ringTimer = setTimeout(() => { if (s.pendingCall === call) window.endCall(); }, 45000);
+            const ended = () => { if (s.pendingCall === call) window.endCall(false); };
+            call.on('close', ended); call.on('error', ended);
+        }
+        window.rejectIncomingCall = () => { if (window.appState.pendingCall) window.endCall(); };
+        window.acceptIncomingCall = async () => {
+            const s = window.appState, call = s.pendingCall;
+            if (!call || s.mediaToken) return;
+            const token = {}; s.mediaToken = token;
+            document.getElementById('accept-call').disabled = true;
+            const code = call.peer.replace('vortex-', ''), type = call.metadata?.streamType || 'voice';
+            try {
+                const stream = await captureCallMedia(type === 'video' ? 'video' : 'voice');
+                if (s.pendingCall !== call || s.mediaToken !== token) { stream.getTracks().forEach(t => t.stop()); return; }
+                clearTimeout(call.ringTimer); s.pendingCall = null;
+                closeModal('incomingCallModal');
+                openChat(code, s.currentUser.friends.find(f => f.code === code).profile);
+                s.activeCallCode = code;
+                const local = useCallStream(stream, type, code);
+                setupMediaCallEvents(call);
+                call.answer(local);
+                setCallActiveUI(true);
+            } catch (e) {
+                if (s.mediaToken === token) { window.endCall(); customAlert('Não foi possível acessar microfone/câmera. A chamada foi recusada.'); }
+            }
+        };
+
+
+        // Mostra/esconde a "bolinha" com a foto do contato durante chamadas de voz
+        function showVoiceCallUI(code) {
+            const friend = window.appState.currentUser.friends.find(f => f.code === code);
+            const profile = friend ? friend.profile : { name: 'Conexão', avatar: '' };
+            const name = profile.name || 'Conexão';
+            document.getElementById('voice-call-avatar').src = profile.avatar || `https://placehold.co/150x150/1e1b4b/00f2fe?text=${encodeURIComponent(name.charAt(0))}`;
+            document.getElementById('voice-call-name').innerText = name;
+            const area = document.getElementById('voice-call-area');
+            area.classList.remove('hidden');
+            area.classList.add('flex');
+        }
+
+        function hideVoiceCallUI() {
+            const area = document.getElementById('voice-call-area');
+            area.classList.add('hidden');
+            area.classList.remove('flex');
+        }
+
+        // Habilita/desabilita os botões de chamada e mostra/esconde o botão de desligar
+        function setCallActiveUI(active) {
+            const endBtn = document.getElementById('btn-end-call');
+            if (endBtn) endBtn.classList.toggle('hidden', !active);
+            ['btn-call-voice', 'btn-call-video', 'btn-call-screen'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                btn.disabled = active;
+                btn.classList.toggle('opacity-30', active);
+                btn.classList.toggle('pointer-events-none', active);
+            });
+        }
+
+        // Encerra a chamada em andamento (voz, vídeo ou compartilhamento de tela)
+        window.endCall = (notify = true) => {
+            const s = window.appState;
+            const call = s.pendingCall || s.calls[s.activeCallCode];
+            const code = call ? call.peer.replace('vortex-', '') : s.activeCallCode;
+            s.pendingCall = null; s.activeCallCode = null; s.mediaToken = null;
+            if (code) delete s.calls[code];
+            if (call) {
+                clearTimeout(call.ringTimer);
+                if (notify) safeSend(s.connections[code], {type: 'call_end', callId: call.metadata?.callId});
+                call.close();
+            }
+            [s.localStream, s.rawLocalStream].forEach(stream => stream?.getTracks().forEach(t => t.stop()));
+            s.localStream = null; s.rawLocalStream = null;
+            if (s.voiceOscillator) { s.voiceOscillator.stop(); s.voiceOscillator.disconnect(); s.voiceOscillator = null; }
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('remote-video').srcObject = null;
+            document.getElementById('video-area').classList.add('hidden');
+            closeModal('incomingCallModal'); hideVoiceCallUI(); setCallActiveUI(false);
+        };
+        function setupMediaCallEvents(call) {
+            const s = window.appState, code = call.peer.replace('vortex-', '');
+            s.calls[code] = call;
+            call.ringTimer = setTimeout(() => { if (s.calls[code] === call) { window.endCall(); customAlert('Chamada sem resposta.'); } }, 45000);
+            call.on('stream', stream => {
+                if (s.calls[code] !== call) return;
+                clearTimeout(call.ringTimer);
+                const video = document.getElementById('remote-video'); video.srcObject = stream; video.muted = s.isDeafened;
+                if (['video','screen'].includes(call.metadata?.streamType)) document.getElementById('video-area').classList.remove('hidden');
+                const output = document.getElementById('audio-output-select').value;
+                if (output !== 'default' && video.setSinkId) video.setSinkId(output).catch(console.warn);
+                video.play().catch(() => customAlert('Clique na página para permitir a reprodução do áudio.'));
+            });
+            const ended = () => { clearTimeout(call.ringTimer); if (s.calls[code] === call) window.endCall(false); };
+            call.on('close', ended); call.on('error', ended);
+        }
+
+
+        window.toggleMic = () => {
+            window.appState.isMuted = !window.appState.isMuted;
+            const btn = document.getElementById('btn-mic');
+            btn.innerHTML = window.appState.isMuted ? '<i class="fas fa-microphone-slash text-red-500"></i>' : '<i class="fas fa-microphone"></i>';
+            if (window.appState.localStream) {
+                window.appState.localStream.getAudioTracks().forEach(t => t.enabled = !window.appState.isMuted);
+            }
+        };
+
+        window.toggleDeafen = () => {
+            window.appState.isDeafened = !window.appState.isDeafened;
+            const btn = document.getElementById('btn-deaf');
+            btn.innerHTML = window.appState.isDeafened ? '<i class="fas fa-volume-mute text-red-500"></i>' : '<i class="fas fa-headphones"></i>';
+            document.getElementById('remote-video').muted = window.appState.isDeafened;
+        };
+
+        function playInternalSound(type) {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            
+            if(type === 'ping') {
+                o.type = 'sine'; o.frequency.setValueAtTime(880, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.5, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                o.start(); o.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'alert') {
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(200, audioCtx.currentTime);
+                o.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                g.gain.setValueAtTime(0.5, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                o.start(); o.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'buzz') {
+                o.type = 'square'; o.frequency.setValueAtTime(60, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.5, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.4);
+                o.start(); o.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        window.playSoundboard = (type) => {
+            if (!window.appState.isDeafened) playInternalSound(type);
+            if (window.appState.activeChatId) {
+                const conn = window.appState.connections[window.appState.activeChatId];
+                safeSend(conn, {type: 'sound', soundName: type});
+            }
+            closeModal('soundboardModal');
+        };
+
+        window.switchSettingTab = (tabName) => {
+            ['profile', 'audio', 'appearance'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                document.getElementById('tab-btn-' + t).className = "text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-gray-200 mb-2 transition-colors";
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-btn-' + tabName).className = "text-left px-4 py-3 rounded-lg bg-white/10 text-white font-semibold mb-2 shadow-inner";
+        };
+
+        // Profile Badges Edit UI
+        window.addBadge = () => {
+            const name = document.getElementById('set-badge-name').value;
+            const rawIcon = document.getElementById('set-badge-icon').value;
+            const icon = /^fa-[a-z0-9-]+$/.test(rawIcon) ? rawIcon : 'fa-star';
+            const code = document.getElementById('set-badge-code').value;
+            if(!name || !code) return;
+
+            window.appState.currentUser.badges.push({name, icon, code});
+            document.getElementById('set-badge-name').value = '';
+            document.getElementById('set-badge-code').value = '';
+            renderEditBadges();
+            updateProfilePreview();
+        };
+
+        window.removeBadge = (index) => {
+            window.appState.currentUser.badges.splice(index, 1);
+            renderEditBadges();
+            updateProfilePreview();
+        };
+
+        function renderEditBadges() {
+            const container = document.getElementById('badge-list-edit');
+            container.innerHTML = window.appState.currentUser.badges.map((b, i) => `
+                <div class="bg-black/40 border border-white/10 rounded px-2 py-1 flex items-center text-xs">
+                    <i class="fas ${/^fa-[a-z0-9-]+$/.test(b.icon) ? b.icon : 'fa-star'} text-yellow-400 mr-2"></i> ${escapeHTML(b.name)} 
+                    <button onclick="removeBadge(${i})" class="ml-2 text-red-500 hover:text-red-400"><i class="fas fa-times"></i></button>
+                </div>
+            `).join('');
+        }
+
+        window.saveProfile = () => {
+            const acc = window.appState.currentUser;
+            acc.name = acc.cloudUserId ? acc.username : document.getElementById('set-username').value;
+            acc.bio = document.getElementById('set-bio').value;
+            acc.avatar = document.getElementById('set-avatar').value;
+            acc.banner = document.getElementById('set-banner').value;
+            acc.gameFav = document.getElementById('set-game-fav').value;
+            acc.gamePlaying = document.getElementById('set-game-playing').value;
+            
+            saveLocalData();
+            updateProfilePreview();
+            
+            // Sync with active connections
+            Object.values(window.appState.connections).forEach(conn => {
+                if (isFriend(conn.peer.replace('vortex-', ''))) safeSend(conn, {type: 'profile_sync', data: publicProfile(conn.peer.replace('vortex-', ''))});
+            });
+            
+            document.getElementById('my-username').innerText = acc.name;
+            if (acc.avatar) document.getElementById('my-avatar').src = acc.avatar;
+            
+            customAlert("Identidade atualizada. A rede propagará as mudanças para conexões ativas.");
+        };
+
+        function updateProfilePreview() {
+            const acc = window.appState.currentUser;
+            document.getElementById('preview-name').innerText = acc.name;
+            document.getElementById('preview-bio').innerText = acc.bio || '';
+            document.getElementById('preview-game-fav').innerText = acc.gameFav || 'Nenhum';
+            document.getElementById('preview-game-playing').innerText = acc.gamePlaying || 'Nenhum';
+            if (acc.avatar) document.getElementById('preview-avatar').src = acc.avatar;
+            document.getElementById('preview-banner').style.backgroundImage = acc.banner ? `url('${acc.banner}')` : 'linear-gradient(to right, #0891b2, #312e81)';
+            
+            document.getElementById('preview-badges').innerHTML = (acc.badges || []).map(b => `
+                <div class="bg-black/40 border border-white/10 rounded px-2 py-1" title="${escapeHTML(b.name)}">
+                    <i class="fas ${/^fa-[a-z0-9-]+$/.test(b.icon) ? b.icon : 'fa-star'} text-yellow-400 text-xs"></i>
+                </div>
+            `).join('');
+            
+            renderEditBadges(); // Sync edit list
+        }
+
+        window.setAppBackground = () => {
+            const url = document.getElementById('app-bg-url').value;
+            applyAppBackground(url);
+            if (window.appState.currentUser) {
+                window.appState.currentUser.bgUrl = url;
+                saveLocalData();
+            }
+        };
+
+        function applyAppBackground(url) {
+            const wrapper = document.getElementById('app-wrapper');
+            if (url) {
+                wrapper.style.backgroundImage = `url('${url}')`;
+            } else {
+                wrapper.style.backgroundImage = 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)';
+            }
+        }
+
+        window.copyMyCode = () => {
+            const code = document.getElementById('my-daily-code').value;
+            const ta = document.createElement("textarea"); ta.value = code;
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            customAlert("Código público copiado para a área de transferência.");
+        };
+
+        // Espaços são representações locais mockadas nesta versão focada em P2P puro. 
+        function renderSpacesList() {
+            const list = document.getElementById('spaces-list');
+            list.innerHTML = '';
+            window.appState.currentUser.spaces.forEach(space => {
+                const btn = document.createElement('div');
+                btn.className = 'w-full flex items-center p-3 bg-black/20 hover:bg-white/5 border border-transparent hover:border-purple-500/50 rounded-xl transition-all cursor-pointer';
+                btn.onclick = () => customAlert(`Espaço: ${space.name}\nCódigo Convite: ${space.code}\n\nPara multi-peer real WebRTC mesh network num ambiente sem servidor, seria necessário um roteador SFU pesado. O P2P atual foca nas DMs.`);
+                btn.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mr-4 text-white font-bold shadow-lg border border-white/10 shrink-0">
+                        ${escapeHTML(space.name.charAt(0).toUpperCase())}
+                    </div>
+                    <div class="text-left truncate">
+                        <div class="text-sm font-bold truncate text-white">${escapeHTML(space.name)}</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest">Hash: ${escapeHTML(space.code)}</div>
+                    </div>
+                `;
+                list.appendChild(btn);
+            });
+        }
+
+        window.createSpace = () => {
+            const name = document.getElementById('new-space-name').value;
+            if(!name) return;
+            const code = 'VX-' + Math.floor(1000 + Math.random() * 9000);
+            window.appState.currentUser.spaces.push({ name, code });
+            saveLocalData();
+            renderSpacesList();
+            closeModal('createSpaceModal');
+            customAlert(`Espaço "${name}" criado!\nInsígnia Hash: ${code}`);
+        };
+
+        window.joinSpace = () => {
+            const code = document.getElementById('join-space-code').value;
+            if(!code) return;
+            customAlert(`Solicitação para o Espaço ${code} despachada pela rede. Aguardando aceitação (Mock).`);
+            closeModal('createSpaceModal');
+        };
+
+        window.promptJoinSpace = (code, name) => {
+            customAlert(`Você está tentando acessar o espaço associado à insígnia:\n\n[ ${name} ]\nHash do Espaço: ${code}\n\nConectando ao nó roteador... (Mock)`);
+        };
+
+        // Init App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAccounts();
+            
+            // Dynamic settings inputs binding
+            document.getElementById('set-username').addEventListener('input', (e) => document.getElementById('preview-name').innerText = e.target.value || 'User');
+            document.getElementById('set-bio').addEventListener('input', (e) => document.getElementById('preview-bio').innerText = e.target.value || 'Sem transmissão.');
+            document.getElementById('set-avatar').addEventListener('input', (e) => { if(e.target.value) document.getElementById('preview-avatar').src = e.target.value; });
+            document.getElementById('set-banner').addEventListener('input', (e) => {
+                document.getElementById('preview-banner').style.backgroundImage = e.target.value ? `url('${e.target.value}')` : 'linear-gradient(to right, #0891b2, #312e81)';
+            });
+            document.getElementById('set-game-fav').addEventListener('input', (e) => document.getElementById('preview-game-fav').innerText = e.target.value || 'Nenhum');
+            document.getElementById('set-game-playing').addEventListener('input', (e) => document.getElementById('preview-game-playing').innerText = e.target.value || 'Nenhum');
+        });
+
+    </script>
+</body>
+</html>
