@@ -4,440 +4,1771 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogos - Tancredo Destroyer</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        rel="stylesheet"
+    >
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
-        body { font-family: 'Roboto', sans-serif; background-color: #0f0f1a; color: white; overflow-x: hidden; }
-        .font-gaming { font-family: 'Orbitron', sans-serif; }
-        .admin-modal, .auth-modal { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); }
-        .text-glow { text-shadow: 0 0 10px rgba(233, 69, 96, 0.5); }
-        .crown-active { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f0f1a; }
-        ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 10px; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f0f1a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .font-gaming {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .admin-modal,
+        .auth-modal {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        .crown-active {
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f0f1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 10px;
+        }
 
         .game-card {
             transition: transform 0.3s ease, border-color 0.3s ease;
         }
+
         .game-card:hover {
             transform: translateY(-5px);
         }
+
+        /* Vortex */
+        .vortex-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vortex-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(34, 211, 238, 0.16),
+                    transparent 65%
+                );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .vortex-button:hover::before {
+            opacity: 1;
+        }
     </style>
 </head>
+
 <body class="min-h-screen pb-20">
 
     <!-- Header Principal -->
-    <header class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0f0f1a] sticky top-0 z-40">
+    <header
+        class="p-6 border-b border-gray-800 flex justify-between items-center
+               bg-[#0f0f1a] sticky top-0 z-40"
+    >
+
         <div class="flex items-center gap-6">
-            <a href="#" class="font-gaming text-[#e94560] text-xl tracking-tighter hover:opacity-80 transition">
-                <i class="fas fa-bolt mr-2"></i> TANCREDO DESTROYER
+
+            <a
+                href="#"
+                class="font-gaming text-[#e94560] text-xl tracking-tighter
+                       hover:opacity-80 transition"
+            >
+                <i class="fas fa-bolt mr-2"></i>
+                TANCREDO DESTROYER
             </a>
+
         </div>
 
-        <div class="flex items-center gap-4">
-            <button id="adminBtn" onclick="handleAdminAccess()" class="text-gray-400 hover:text-white transition text-xs font-gaming hidden md:block">
-                PAINEL ADMIN <i class="fas fa-cog ml-1"></i>
+        <div class="flex items-center gap-3">
+
+            <!-- VORTEX P2P -->
+            <a
+                href="vortexp2p.html"
+                class="vortex-button flex items-center gap-2
+                       bg-gradient-to-r from-cyan-500/10 to-blue-600/10
+                       border border-cyan-500/40
+                       hover:border-cyan-400
+                       text-cyan-400 hover:text-white
+                       px-4 py-2 rounded-lg
+                       transition-all
+                       hover:shadow-[0_0_20px_rgba(34,211,238,0.25)]
+                       font-gaming text-[10px] tracking-wider"
+                title="Abrir Vortex P2P"
+            >
+                <i class="fas fa-comments relative z-10"></i>
+
+                <span class="hidden sm:inline relative z-10">
+                    VORTEX P2P
+                </span>
+            </a>
+
+            <button
+                id="adminBtn"
+                onclick="handleAdminAccess()"
+                class="text-gray-400 hover:text-white transition
+                       text-xs font-gaming hidden md:block"
+            >
+                PAINEL ADMIN
+                <i class="fas fa-cog ml-1"></i>
             </button>
-            <div id="userArea" class="flex items-center gap-3"></div>
+
+            <div
+                id="userArea"
+                class="flex items-center gap-3"
+            ></div>
+
         </div>
+
     </header>
+
 
     <!-- Conteúdo Principal -->
     <main class="container mx-auto px-6 py-12">
-        <h2 class="font-gaming text-3xl md:text-5xl text-center mb-16 text-glow uppercase tracking-widest">Biblioteca de Jogos</h2>
-        
+
+        <h2
+            class="font-gaming text-3xl md:text-5xl text-center
+                   mb-16 text-glow uppercase tracking-widest"
+        >
+            Biblioteca de Jogos
+        </h2>
+
         <!-- Grid de Jogos -->
-        <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div
+            id="gamesGrid"
+            class="grid grid-cols-1 sm:grid-cols-2
+                   lg:grid-cols-3 xl:grid-cols-4 gap-8"
+        >
             <!-- Jogos inseridos via JavaScript -->
         </div>
+
     </main>
 
+
     <!-- Modal de Administração -->
-    <div id="adminModal" class="fixed inset-0 admin-modal hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#1a1a2e] border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            
+    <div
+        id="adminModal"
+        class="fixed inset-0 admin-modal hidden z-50
+               flex items-center justify-center p-4"
+    >
+
+        <div
+            class="bg-[#1a1a2e] border border-gray-700 rounded-2xl
+                   w-full max-w-4xl max-h-[90vh] overflow-hidden
+                   flex flex-col shadow-2xl"
+        >
+
             <!-- Login Admin -->
-            <div id="adminLogin" class="p-8 text-center">
-                <h3 class="font-gaming text-xl mb-6 text-[#e94560]">Acesso Restrito</h3>
-                <input type="password" id="adminSecretInput" placeholder="Senha ADM" class="bg-[#0f0f1a] border border-gray-600 p-4 rounded-lg mb-6 outline-none focus:border-[#e94560] text-center w-full max-w-xs block mx-auto tracking-widest">
+            <div
+                id="adminLogin"
+                class="p-8 text-center"
+            >
+
+                <h3
+                    class="font-gaming text-xl mb-6 text-[#e94560]"
+                >
+                    Acesso Restrito
+                </h3>
+
+                <input
+                    type="password"
+                    id="adminSecretInput"
+                    placeholder="Senha ADM"
+                    class="bg-[#0f0f1a] border border-gray-600
+                           p-4 rounded-lg mb-6 outline-none
+                           focus:border-[#e94560] text-center
+                           w-full max-w-xs block mx-auto
+                           tracking-widest"
+                >
+
                 <div class="flex gap-3 justify-center">
-                    <button onclick="verifyAdmin()" class="bg-[#e94560] px-8 py-3 rounded-lg font-bold hover:bg-[#ff4d6d]">ENTRAR</button>
-                    <button onclick="closeAdmin()" class="border border-gray-600 px-8 py-3 rounded-lg hover:bg-gray-800">FECHAR</button>
+
+                    <button
+                        onclick="verifyAdmin()"
+                        class="bg-[#e94560] px-8 py-3 rounded-lg
+                               font-bold hover:bg-[#ff4d6d]"
+                    >
+                        ENTRAR
+                    </button>
+
+                    <button
+                        onclick="closeAdmin()"
+                        class="border border-gray-600 px-8 py-3
+                               rounded-lg hover:bg-gray-800"
+                    >
+                        FECHAR
+                    </button>
+
                 </div>
+
             </div>
+
 
             <!-- Painel Admin -->
-            <div id="adminPanel" class="hidden flex flex-col h-full">
-                <div class="flex bg-[#0f0f1a] p-2 gap-1 overflow-x-auto border-b border-gray-800">
-                    <button onclick="setAdminTab('add')" id="adminTabAdd" class="px-4 py-3 font-gaming text-[10px] rounded-lg">NOVO JOGO</button>
-                    <button onclick="setAdminTab('manage')" id="adminTabManage" class="px-4 py-3 font-gaming text-[10px] rounded-lg hover:bg-white/5">GERENCIAR</button>
-                    <button onclick="setAdminTab('users')" id="adminTabUsers" class="px-4 py-3 font-gaming text-[10px] rounded-lg hover:bg-white/5">UTILIZADORES</button>
-                    <button onclick="setAdminTab('backup')" id="adminTabBackup" class="px-4 py-3 font-gaming text-[10px] rounded-lg text-blue-400">BACKUP</button>
-                    <button onclick="closeAdmin()" class="ml-auto px-4 py-3 text-gray-500"><i class="fas fa-times"></i></button>
+            <div
+                id="adminPanel"
+                class="hidden flex flex-col h-full"
+            >
+
+                <div
+                    class="flex bg-[#0f0f1a] p-2 gap-1
+                           overflow-x-auto border-b border-gray-800"
+                >
+
+                    <button
+                        onclick="setAdminTab('add')"
+                        id="adminTabAdd"
+                        class="px-4 py-3 font-gaming text-[10px] rounded-lg"
+                    >
+                        NOVO JOGO
+                    </button>
+
+                    <button
+                        onclick="setAdminTab('manage')"
+                        id="adminTabManage"
+                        class="px-4 py-3 font-gaming text-[10px]
+                               rounded-lg hover:bg-white/5"
+                    >
+                        GERENCIAR
+                    </button>
+
+                    <button
+                        onclick="setAdminTab('users')"
+                        id="adminTabUsers"
+                        class="px-4 py-3 font-gaming text-[10px]
+                               rounded-lg hover:bg-white/5"
+                    >
+                        UTILIZADORES
+                    </button>
+
+                    <button
+                        onclick="setAdminTab('backup')"
+                        id="adminTabBackup"
+                        class="px-4 py-3 font-gaming text-[10px]
+                               rounded-lg text-blue-400"
+                    >
+                        BACKUP
+                    </button>
+
+                    <button
+                        onclick="closeAdmin()"
+                        class="ml-auto px-4 py-3 text-gray-500"
+                    >
+                        <i class="fas fa-times"></i>
+                    </button>
+
                 </div>
+
 
                 <div class="flex-1 overflow-y-auto p-6">
+
                     <!-- Aba Backup -->
-                    <div id="panelBackup" class="hidden text-center space-y-6">
+                    <div
+                        id="panelBackup"
+                        class="hidden text-center space-y-6"
+                    >
+
                         <i class="fas fa-file-export text-4xl text-blue-500"></i>
-                        <h4 class="font-gaming">Gestão de Dados Locais</h4>
-                        <p class="text-xs text-gray-400">Descarregue ou carregue a sua lista de jogos personalizada para evitar perdas.</p>
+
+                        <h4 class="font-gaming">
+                            Gestão de Dados Locais
+                        </h4>
+
+                        <p class="text-xs text-gray-400">
+                            Descarregue ou carregue a sua lista de jogos
+                            personalizada para evitar perdas.
+                        </p>
+
                         <div class="flex flex-col gap-3 max-w-xs mx-auto">
-                            <button onclick="exportarDados()" class="bg-blue-600 py-3 rounded-xl font-bold text-xs uppercase hover:bg-blue-500 transition">Exportar Ficheiro JSON</button>
-                            <label class="bg-gray-700 py-3 rounded-xl font-bold text-xs uppercase cursor-pointer hover:bg-gray-600 transition">
+
+                            <button
+                                onclick="exportarDados()"
+                                class="bg-blue-600 py-3 rounded-xl
+                                       font-bold text-xs uppercase
+                                       hover:bg-blue-500 transition"
+                            >
+                                Exportar Ficheiro JSON
+                            </button>
+
+                            <label
+                                class="bg-gray-700 py-3 rounded-xl
+                                       font-bold text-xs uppercase
+                                       cursor-pointer hover:bg-gray-600 transition"
+                            >
                                 Importar Ficheiro JSON
-                                <input type="file" id="importFile" class="hidden" onchange="importarDados(event)">
+
+                                <input
+                                    type="file"
+                                    id="importFile"
+                                    class="hidden"
+                                    onchange="importarDados(event)"
+                                >
                             </label>
+
                         </div>
+
                     </div>
+
 
                     <!-- Aba Utilizadores -->
-                    <div id="panelUsers" class="hidden">
+                    <div
+                        id="panelUsers"
+                        class="hidden"
+                    >
+
                         <table class="w-full text-left">
-                            <thead class="text-[10px] text-gray-500 uppercase border-b border-gray-800">
+
+                            <thead
+                                class="text-[10px] text-gray-500 uppercase
+                                       border-b border-gray-800"
+                            >
                                 <tr>
-                                    <th class="p-3 w-10">MOD</th>
-                                    <th class="p-3">NOME</th>
-                                    <th class="p-3 text-right">AÇÕES</th>
+                                    <th class="p-3 w-10">
+                                        MOD
+                                    </th>
+
+                                    <th class="p-3">
+                                        NOME
+                                    </th>
+
+                                    <th class="p-3 text-right">
+                                        AÇÕES
+                                    </th>
                                 </tr>
                             </thead>
+
                             <tbody id="adminUsersList"></tbody>
+
                         </table>
+
                     </div>
+
 
                     <!-- Aba Adicionar Jogo -->
-                    <div id="panelAdd" class="space-y-4">
-                         <input type="text" id="gameName" placeholder="Nome do Jogo" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <input type="text" id="gameBanner" placeholder="URL da Imagem de Capa" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <input type="text" id="gameUrl" placeholder="URL do Jogo (ex: Eaglercraft_1.12.html)" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg outline-none focus:border-[#e94560]">
-                         <button onclick="saveGame()" class="w-full bg-[#e94560] py-4 rounded-lg font-gaming text-sm hover:bg-[#ff4d6d] transition">REGISTAR JOGO</button>
+                    <div
+                        id="panelAdd"
+                        class="space-y-4"
+                    >
+
+                        <input
+                            type="text"
+                            id="gameName"
+                            placeholder="Nome do Jogo"
+                            class="w-full bg-[#0f0f1a]
+                                   border border-gray-700 p-3
+                                   rounded-lg outline-none
+                                   focus:border-[#e94560]"
+                        >
+
+                        <input
+                            type="text"
+                            id="gameBanner"
+                            placeholder="URL da Imagem de Capa"
+                            class="w-full bg-[#0f0f1a]
+                                   border border-gray-700 p-3
+                                   rounded-lg outline-none
+                                   focus:border-[#e94560]"
+                        >
+
+                        <input
+                            type="text"
+                            id="gameUrl"
+                            placeholder="URL do Jogo (ex: Eaglercraft_1.12.html)"
+                            class="w-full bg-[#0f0f1a]
+                                   border border-gray-700 p-3
+                                   rounded-lg outline-none
+                                   focus:border-[#e94560]"
+                        >
+
+                        <button
+                            onclick="saveGame()"
+                            class="w-full bg-[#e94560] py-4
+                                   rounded-lg font-gaming text-sm
+                                   hover:bg-[#ff4d6d] transition"
+                        >
+                            REGISTAR JOGO
+                        </button>
+
                     </div>
-                    
+
+
                     <!-- Aba Gerir Jogos -->
-                    <div id="panelManage" class="hidden space-y-2">
+                    <div
+                        id="panelManage"
+                        class="hidden space-y-2"
+                    >
                         <div id="adminGamesList"></div>
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 
     <!-- Modal de Autenticação -->
-    <div id="authModal" class="fixed inset-0 auth-modal hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#1a1a2e] border border-gray-700 p-8 rounded-2xl w-full max-w-md">
-            <h3 class="font-gaming text-center mb-6">Acesso à Conta</h3>
-            <input type="text" id="authUser" placeholder="Utilizador" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg mb-3">
-            <input type="password" id="authPass" placeholder="Senha" class="w-full bg-[#0f0f1a] border border-gray-700 p-3 rounded-lg mb-6">
-            <button onclick="handleUserAuth()" class="w-full bg-[#e94560] py-3 rounded-lg font-bold font-gaming text-xs">ENTRAR / REGISTAR</button>
-            <button onclick="closeAuth()" class="w-full mt-4 text-gray-500 text-xs hover:text-white transition">VOLTAR</button>
+    <div
+        id="authModal"
+        class="fixed inset-0 auth-modal hidden z-50
+               flex items-center justify-center p-4"
+    >
+
+        <div
+            class="bg-[#1a1a2e] border border-gray-700
+                   p-8 rounded-2xl w-full max-w-md"
+        >
+
+            <h3 class="font-gaming text-center mb-6">
+                Acesso à Conta
+            </h3>
+
+            <input
+                type="text"
+                id="authUser"
+                placeholder="Utilizador"
+                class="w-full bg-[#0f0f1a]
+                       border border-gray-700
+                       p-3 rounded-lg mb-3"
+            >
+
+            <input
+                type="password"
+                id="authPass"
+                placeholder="Senha"
+                class="w-full bg-[#0f0f1a]
+                       border border-gray-700
+                       p-3 rounded-lg mb-6"
+            >
+
+            <button
+                onclick="handleUserAuth()"
+                class="w-full bg-[#e94560]
+                       py-3 rounded-lg font-bold
+                       font-gaming text-xs"
+            >
+                ENTRAR / REGISTAR
+            </button>
+
+            <button
+                onclick="closeAuth()"
+                class="w-full mt-4 text-gray-500
+                       text-xs hover:text-white transition"
+            >
+                VOLTAR
+            </button>
+
         </div>
+
     </div>
 
+
     <script>
+
         const DB_NAME = "TancredoDB";
-        const STORES = { GAMES: "games", USERS: "users" };
+
+        const STORES = {
+            GAMES: "games",
+            USERS: "users"
+        };
+
         const ADMIN_PASS = "qwertyuiop";
-        
+
+
         // Jogo Fixo: Minecraft (Sempre presente)
         const FIXED_GAMES = [
             {
                 id: "fixed-mc",
+
                 name: "Minecraft 1.12.2",
-                banner: "https://imgs.search.brave.com/VtV36_mMkG2HfhPS-Isq57xJZvzuMnhFZsQAtzjrbQY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9taW5l/Y3JhZnRzaG9wLmNv/bS5ici9hc3NldHMv/aW1nL3pnb21leHMu/anBn",
-                url: "Eaglercraft_1.12_Offline_en_US.html"
+
+                banner:
+                    "https://imgs.search.brave.com/VtV36_mMkG2HfhPS-Isq57xJZvzuMnhFZsQAtzjrbQY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9taW5l/Y3JhZnRzaG9wLmNv/bS5ici9hc3NldHMv/aW1nL3pnb21leHMu/anBn",
+
+                url:
+                    "Eaglercraft_1.12_Offline_en_US.html"
             }
         ];
 
+
         let db;
-        let currentUser = JSON.parse(localStorage.getItem('td_session')) || null;
 
-        // --- Inicialização da Base de Dados ---
+        let currentUser =
+            JSON.parse(
+                localStorage.getItem('td_session')
+            ) || null;
+
+
+        // =====================================================
+        // Inicialização da Base de Dados
+        // =====================================================
+
         const req = indexedDB.open(DB_NAME, 3);
+
+
         req.onupgradeneeded = (e) => {
+
             const d = e.target.result;
-            if(!d.objectStoreNames.contains(STORES.GAMES)) d.createObjectStore(STORES.GAMES, { keyPath: "id", autoIncrement: true });
-            if(!d.objectStoreNames.contains(STORES.USERS)) d.createObjectStore(STORES.USERS, { keyPath: "username" });
-        };
-        req.onsuccess = (e) => {
-            db = e.target.result;
-            renderGames();
-            updateUserUI();
+
+
+            if (
+                !d.objectStoreNames.contains(
+                    STORES.GAMES
+                )
+            ) {
+
+                d.createObjectStore(
+                    STORES.GAMES,
+                    {
+                        keyPath: "id",
+                        autoIncrement: true
+                    }
+                );
+
+            }
+
+
+            if (
+                !d.objectStoreNames.contains(
+                    STORES.USERS
+                )
+            ) {
+
+                d.createObjectStore(
+                    STORES.USERS,
+                    {
+                        keyPath: "username"
+                    }
+                );
+
+            }
+
         };
 
-        // --- Funções de Backup ---
+
+        req.onsuccess = (e) => {
+
+            db = e.target.result;
+
+            renderGames();
+
+            updateUserUI();
+
+        };
+
+
+        // =====================================================
+        // Funções de Backup
+        // =====================================================
+
         async function exportarDados() {
-            const list = await getAllFromStore(STORES.GAMES);
-            const blob = new Blob([JSON.stringify(list, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+
+            const list =
+                await getAllFromStore(
+                    STORES.GAMES
+                );
+
+
+            const blob =
+                new Blob(
+                    [
+                        JSON.stringify(
+                            list,
+                            null,
+                            2
+                        )
+                    ],
+                    {
+                        type: 'application/json'
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const a =
+                document.createElement(
+                    'a'
+                );
+
+
             a.href = url;
-            a.download = `backup_jogos_tancredo_${new Date().getTime()}.json`;
+
+            a.download =
+                `backup_jogos_tancredo_${new Date().getTime()}.json`;
+
+
             a.click();
+
         }
+
 
         function importarDados(event) {
-            const file = event.target.files[0];
+
+            const file =
+                event.target.files[0];
+
+
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const games = JSON.parse(e.target.result);
-                    const tx = db.transaction([STORES.GAMES], "readwrite");
-                    const store = tx.objectStore(STORES.GAMES);
-                    games.forEach(g => {
-                        if (g.id && typeof g.id === 'string' && g.id.startsWith('fixed')) return; // ignora fixos
-                        delete g.id; 
-                        store.add(g);
-                    });
-                    tx.oncomplete = () => { renderGames(); alert("Jogos importados com sucesso!"); };
-                } catch (err) {
-                    alert("Erro ao importar ficheiro. Formato inválido.");
-                }
-            };
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                async (e) => {
+
+                    try {
+
+                        const games =
+                            JSON.parse(
+                                e.target.result
+                            );
+
+
+                        const tx =
+                            db.transaction(
+                                [STORES.GAMES],
+                                "readwrite"
+                            );
+
+
+                        const store =
+                            tx.objectStore(
+                                STORES.GAMES
+                            );
+
+
+                        games.forEach(
+                            g => {
+
+                                if (
+                                    g.id &&
+                                    typeof g.id === 'string' &&
+                                    g.id.startsWith('fixed')
+                                ) {
+                                    return;
+                                }
+
+
+                                delete g.id;
+
+                                store.add(g);
+
+                            }
+                        );
+
+
+                        tx.oncomplete =
+                            () => {
+
+                                renderGames();
+
+                                alert(
+                                    "Jogos importados com sucesso!"
+                                );
+
+                            };
+
+                    }
+
+                    catch (err) {
+
+                        alert(
+                            "Erro ao importar ficheiro. Formato inválido."
+                        );
+
+                    }
+
+                };
+
+
             reader.readAsText(file);
+
         }
+
 
         function getAllFromStore(storeName) {
-            return new Promise(resolve => {
-                const list = [];
-                const tx = db.transaction([storeName], "readonly");
-                tx.objectStore(storeName).openCursor().onsuccess = e => {
-                    const cursor = e.target.result;
-                    if(cursor) { list.push(cursor.value); cursor.continue(); }
-                    else resolve(list);
-                };
-            });
+
+            return new Promise(
+                resolve => {
+
+                    const list = [];
+
+
+                    const tx =
+                        db.transaction(
+                            [storeName],
+                            "readonly"
+                        );
+
+
+                    tx
+                        .objectStore(storeName)
+                        .openCursor()
+                        .onsuccess =
+                        e => {
+
+                            const cursor =
+                                e.target.result;
+
+
+                            if (cursor) {
+
+                                list.push(
+                                    cursor.value
+                                );
+
+                                cursor.continue();
+
+                            }
+
+                            else {
+
+                                resolve(list);
+
+                            }
+
+                        };
+
+                }
+            );
+
         }
 
-        // --- Administração ---
+
+        // =====================================================
+        // Administração
+        // =====================================================
+
         function handleAdminAccess() {
-            if (currentUser && currentUser.isCrown) {
-                document.getElementById('adminModal').classList.remove('hidden');
-                document.getElementById('adminLogin').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
+
+            if (
+                currentUser &&
+                currentUser.isCrown
+            ) {
+
+                document
+                    .getElementById(
+                        'adminModal'
+                    )
+                    .classList
+                    .remove('hidden');
+
+
+                document
+                    .getElementById(
+                        'adminLogin'
+                    )
+                    .classList
+                    .add('hidden');
+
+
+                document
+                    .getElementById(
+                        'adminPanel'
+                    )
+                    .classList
+                    .remove('hidden');
+
+
                 setAdminTab('add');
-            } else {
-                openAdmin();
+
             }
+
+            else {
+
+                openAdmin();
+
+            }
+
         }
+
 
         function openAdmin() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            document.getElementById('adminLogin').classList.remove('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
+
+            document
+                .getElementById(
+                    'adminModal'
+                )
+                .classList
+                .remove('hidden');
+
+
+            document
+                .getElementById(
+                    'adminLogin'
+                )
+                .classList
+                .remove('hidden');
+
+
+            document
+                .getElementById(
+                    'adminPanel'
+                )
+                .classList
+                .add('hidden');
+
         }
 
-        function closeAdmin() { document.getElementById('adminModal').classList.add('hidden'); }
+
+        function closeAdmin() {
+
+            document
+                .getElementById(
+                    'adminModal'
+                )
+                .classList
+                .add('hidden');
+
+        }
+
 
         function verifyAdmin() {
-            if (document.getElementById('adminSecretInput').value === ADMIN_PASS) {
-                document.getElementById('adminLogin').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
+
+            if (
+                document
+                    .getElementById(
+                        'adminSecretInput'
+                    )
+                    .value
+                === ADMIN_PASS
+            ) {
+
+                document
+                    .getElementById(
+                        'adminLogin'
+                    )
+                    .classList
+                    .add('hidden');
+
+
+                document
+                    .getElementById(
+                        'adminPanel'
+                    )
+                    .classList
+                    .remove('hidden');
+
+
                 setAdminTab('add');
-            } else { alert("Acesso Negado: Senha Incorreta."); }
+
+            }
+
+            else {
+
+                alert(
+                    "Acesso Negado: Senha Incorreta."
+                );
+
+            }
+
         }
+
 
         function setAdminTab(tab) {
-            ['add', 'manage', 'users', 'backup'].forEach(t => {
-                const el = document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`);
-                const btn = document.getElementById(`adminTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
-                if(el) el.classList.add('hidden');
-                if(btn) btn.classList.remove('bg-[#e94560]');
-            });
-            document.getElementById(`panel${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.remove('hidden');
-            document.getElementById(`adminTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('bg-[#e94560]');
-            if(tab === 'users') loadAdminUsers();
-            if(tab === 'manage') loadAdminGames();
+
+            [
+                'add',
+                'manage',
+                'users',
+                'backup'
+            ].forEach(
+                t => {
+
+                    const el =
+                        document.getElementById(
+                            `panel${t.charAt(0).toUpperCase() + t.slice(1)}`
+                        );
+
+
+                    const btn =
+                        document.getElementById(
+                            `adminTab${t.charAt(0).toUpperCase() + t.slice(1)}`
+                        );
+
+
+                    if (el) {
+
+                        el.classList.add(
+                            'hidden'
+                        );
+
+                    }
+
+
+                    if (btn) {
+
+                        btn.classList.remove(
+                            'bg-[#e94560]'
+                        );
+
+                    }
+
+                }
+            );
+
+
+            document
+                .getElementById(
+                    `panel${tab.charAt(0).toUpperCase() + tab.slice(1)}`
+                )
+                .classList
+                .remove('hidden');
+
+
+            document
+                .getElementById(
+                    `adminTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`
+                )
+                .classList
+                .add('bg-[#e94560]');
+
+
+            if (tab === 'users') {
+
+                loadAdminUsers();
+
+            }
+
+
+            if (tab === 'manage') {
+
+                loadAdminGames();
+
+            }
+
         }
+
 
         function loadAdminUsers() {
-            const tbody = document.getElementById('adminUsersList');
+
+            const tbody =
+                document.getElementById(
+                    'adminUsersList'
+                );
+
+
             tbody.innerHTML = '';
-            db.transaction([STORES.USERS], "readonly").objectStore(STORES.USERS).openCursor().onsuccess = e => {
-                const cursor = e.target.result;
-                if(cursor) {
-                    const u = cursor.value;
-                    tbody.innerHTML += `
-                        <tr class="border-b border-gray-800 text-xs">
-                            <td class="p-3 text-center">
-                                <button onclick="toggleCrown('${u.username}')">
-                                    <i class="fas fa-crown ${u.isCrown ? 'crown-active' : 'text-gray-700'}"></i>
-                                </button>
-                            </td>
-                            <td class="p-3 font-bold">${u.username}</td>
-                            <td class="p-3 text-right">
-                                <button onclick="deleteUser('${u.username}')" class="text-red-500 hover:underline">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                    cursor.continue();
-                }
-            };
+
+
+            db
+                .transaction(
+                    [STORES.USERS],
+                    "readonly"
+                )
+                .objectStore(
+                    STORES.USERS
+                )
+                .openCursor()
+                .onsuccess =
+                e => {
+
+                    const cursor =
+                        e.target.result;
+
+
+                    if (cursor) {
+
+                        const u =
+                            cursor.value;
+
+
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-800 text-xs">
+
+                                <td class="p-3 text-center">
+
+                                    <button
+                                        onclick="toggleCrown('${u.username}')"
+                                    >
+
+                                        <i
+                                            class="fas fa-crown ${
+                                                u.isCrown
+                                                    ? 'crown-active'
+                                                    : 'text-gray-700'
+                                            }"
+                                        ></i>
+
+                                    </button>
+
+                                </td>
+
+
+                                <td class="p-3 font-bold">
+                                    ${u.username}
+                                </td>
+
+
+                                <td class="p-3 text-right">
+
+                                    <button
+                                        onclick="deleteUser('${u.username}')"
+                                        class="text-red-500 hover:underline"
+                                    >
+                                        Eliminar
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                        `;
+
+
+                        cursor.continue();
+
+                    }
+
+                };
+
         }
+
 
         function toggleCrown(username) {
-            const tx = db.transaction([STORES.USERS], "readwrite");
-            const store = tx.objectStore(STORES.USERS);
-            store.get(username).onsuccess = (e) => {
-                const user = e.target.result;
-                user.isCrown = !user.isCrown;
-                store.put(user).onsuccess = () => {
-                    if (currentUser && currentUser.username === username) {
-                        currentUser.isCrown = user.isCrown;
-                        localStorage.setItem('td_session', JSON.stringify(currentUser));
-                        updateUserUI();
-                    }
-                    loadAdminUsers();
+
+            const tx =
+                db.transaction(
+                    [STORES.USERS],
+                    "readwrite"
+                );
+
+
+            const store =
+                tx.objectStore(
+                    STORES.USERS
+                );
+
+
+            store
+                .get(username)
+                .onsuccess =
+                (e) => {
+
+                    const user =
+                        e.target.result;
+
+
+                    user.isCrown =
+                        !user.isCrown;
+
+
+                    store
+                        .put(user)
+                        .onsuccess =
+                        () => {
+
+                            if (
+                                currentUser &&
+                                currentUser.username === username
+                            ) {
+
+                                currentUser.isCrown =
+                                    user.isCrown;
+
+
+                                localStorage.setItem(
+                                    'td_session',
+                                    JSON.stringify(
+                                        currentUser
+                                    )
+                                );
+
+
+                                updateUserUI();
+
+                            }
+
+
+                            loadAdminUsers();
+
+                        };
+
                 };
-            };
+
         }
+
 
         function deleteUser(username) {
-            if(confirm(`Tem a certeza que deseja remover ${username}?`)) {
-                db.transaction([STORES.USERS], "readwrite").objectStore(STORES.USERS).delete(username).onsuccess = loadAdminUsers;
+
+            if (
+                confirm(
+                    `Tem a certeza que deseja remover ${username}?`
+                )
+            ) {
+
+                db
+                    .transaction(
+                        [STORES.USERS],
+                        "readwrite"
+                    )
+                    .objectStore(
+                        STORES.USERS
+                    )
+                    .delete(username)
+                    .onsuccess =
+                    loadAdminUsers;
+
             }
+
         }
 
-        // --- Gestão de Jogos ---
+
+        // =====================================================
+        // Gestão de Jogos
+        // =====================================================
+
         function saveGame() {
-            const name = document.getElementById('gameName').value;
-            const banner = document.getElementById('gameBanner').value;
-            const url = document.getElementById('gameUrl').value;
-            if(!name || !banner || !url) return alert("Por favor, preencha todos os campos.");
 
-            const tx = db.transaction([STORES.GAMES], "readwrite");
-            tx.objectStore(STORES.GAMES).add({ name, banner, url });
-            tx.oncomplete = () => {
-                renderGames();
-                setAdminTab('manage');
-                document.getElementById('gameName').value = '';
-                document.getElementById('gameBanner').value = '';
-                document.getElementById('gameUrl').value = '';
-            };
+            const name =
+                document
+                    .getElementById(
+                        'gameName'
+                    )
+                    .value;
+
+
+            const banner =
+                document
+                    .getElementById(
+                        'gameBanner'
+                    )
+                    .value;
+
+
+            const url =
+                document
+                    .getElementById(
+                        'gameUrl'
+                    )
+                    .value;
+
+
+            if (
+                !name ||
+                !banner ||
+                !url
+            ) {
+
+                return alert(
+                    "Por favor, preencha todos os campos."
+                );
+
+            }
+
+
+            const tx =
+                db.transaction(
+                    [STORES.GAMES],
+                    "readwrite"
+                );
+
+
+            tx
+                .objectStore(
+                    STORES.GAMES
+                )
+                .add({
+                    name,
+                    banner,
+                    url
+                });
+
+
+            tx.oncomplete =
+                () => {
+
+                    renderGames();
+
+                    setAdminTab(
+                        'manage'
+                    );
+
+
+                    document
+                        .getElementById(
+                            'gameName'
+                        )
+                        .value = '';
+
+
+                    document
+                        .getElementById(
+                            'gameBanner'
+                        )
+                        .value = '';
+
+
+                    document
+                        .getElementById(
+                            'gameUrl'
+                        )
+                        .value = '';
+
+                };
+
         }
+
 
         function loadAdminGames() {
-            const div = document.getElementById('adminGamesList');
+
+            const div =
+                document.getElementById(
+                    'adminGamesList'
+                );
+
+
             div.innerHTML = '';
-            db.transaction([STORES.GAMES], "readonly").objectStore(STORES.GAMES).openCursor().onsuccess = e => {
-                const cursor = e.target.result;
-                if(cursor) {
-                    const g = cursor.value;
-                    div.innerHTML += `
-                        <div class="flex justify-between items-center bg-[#0f0f1a] p-3 rounded-lg border border-gray-800">
-                            <span class="text-xs uppercase font-bold">${g.name}</span>
-                            <button onclick="deleteGame(${g.id})" class="text-red-500 text-[10px] hover:underline">REMOVER</button>
-                        </div>
-                    `;
-                    cursor.continue();
-                }
-            };
+
+
+            db
+                .transaction(
+                    [STORES.GAMES],
+                    "readonly"
+                )
+                .objectStore(
+                    STORES.GAMES
+                )
+                .openCursor()
+                .onsuccess =
+                e => {
+
+                    const cursor =
+                        e.target.result;
+
+
+                    if (cursor) {
+
+                        const g =
+                            cursor.value;
+
+
+                        div.innerHTML += `
+                            <div
+                                class="flex justify-between items-center
+                                       bg-[#0f0f1a] p-3 rounded-lg
+                                       border border-gray-800"
+                            >
+
+                                <span
+                                    class="text-xs uppercase font-bold"
+                                >
+                                    ${g.name}
+                                </span>
+
+
+                                <button
+                                    onclick="deleteGame(${g.id})"
+                                    class="text-red-500 text-[10px]
+                                           hover:underline"
+                                >
+                                    REMOVER
+                                </button>
+
+                            </div>
+                        `;
+
+
+                        cursor.continue();
+
+                    }
+
+                };
+
         }
+
 
         function deleteGame(id) {
-            if(confirm("Deseja remover este jogo da sua lista?")) {
-                db.transaction([STORES.GAMES], "readwrite").objectStore(STORES.GAMES).delete(id).onsuccess = () => {
-                    loadAdminGames();
-                    renderGames();
-                };
+
+            if (
+                confirm(
+                    "Deseja remover este jogo da sua lista?"
+                )
+            ) {
+
+                db
+                    .transaction(
+                        [STORES.GAMES],
+                        "readwrite"
+                    )
+                    .objectStore(
+                        STORES.GAMES
+                    )
+                    .delete(id)
+                    .onsuccess =
+                    () => {
+
+                        loadAdminGames();
+
+                        renderGames();
+
+                    };
+
             }
+
         }
+
 
         function renderGames() {
-            const grid = document.getElementById('gamesGrid');
+
+            const grid =
+                document.getElementById(
+                    'gamesGrid'
+                );
+
+
             grid.innerHTML = '';
 
-            // 1. Mostrar sempre o Minecraft primeiro
-            FIXED_GAMES.forEach(g => {
-                grid.innerHTML += createGameCard(g, true);
-            });
 
-            // 2. Mostrar jogos da Base de Dados
-            db.transaction([STORES.GAMES], "readonly").objectStore(STORES.GAMES).openCursor().onsuccess = e => {
-                const cursor = e.target.result;
-                if(cursor) {
-                    grid.innerHTML += createGameCard(cursor.value, false);
-                    cursor.continue();
+            // Mostrar sempre o Minecraft primeiro
+            FIXED_GAMES.forEach(
+                g => {
+
+                    grid.innerHTML +=
+                        createGameCard(
+                            g,
+                            true
+                        );
+
                 }
-            };
+            );
+
+
+            // Mostrar jogos da Base de Dados
+            db
+                .transaction(
+                    [STORES.GAMES],
+                    "readonly"
+                )
+                .objectStore(
+                    STORES.GAMES
+                )
+                .openCursor()
+                .onsuccess =
+                e => {
+
+                    const cursor =
+                        e.target.result;
+
+
+                    if (cursor) {
+
+                        grid.innerHTML +=
+                            createGameCard(
+                                cursor.value,
+                                false
+                            );
+
+
+                        cursor.continue();
+
+                    }
+
+                };
+
         }
 
-        function createGameCard(g, isFixed) {
+
+        function createGameCard(
+            g,
+            isFixed
+        ) {
+
             return `
-                <div class="game-card bg-[#1a1a2e] rounded-xl overflow-hidden border ${isFixed ? 'border-yellow-500/40 shadow-lg shadow-yellow-500/5' : 'border-gray-800'} group relative">
-                    ${isFixed ? '<span class="absolute top-3 left-3 bg-yellow-500 text-black text-[9px] font-bold px-3 py-1 rounded-full z-10 shadow-md">PADRÃO</span>' : ''}
-                    <div class="relative overflow-hidden aspect-video">
-                        <img src="${g.banner}" alt="${g.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                             <button onclick="window.open('${g.url}')" class="bg-[#e94560] px-6 py-2 rounded-lg font-gaming text-xs">JOGAR AGORA</button>
+                <div
+                    class="game-card bg-[#1a1a2e] rounded-xl
+                           overflow-hidden border
+                           ${
+                               isFixed
+                                   ? 'border-yellow-500/40 shadow-lg shadow-yellow-500/5'
+                                   : 'border-gray-800'
+                           }
+                           group relative"
+                >
+
+                    ${
+                        isFixed
+                            ? `
+                                <span
+                                    class="absolute top-3 left-3
+                                           bg-yellow-500 text-black
+                                           text-[9px] font-bold
+                                           px-3 py-1 rounded-full
+                                           z-10 shadow-md"
+                                >
+                                    PADRÃO
+                                </span>
+                              `
+                            : ''
+                    }
+
+
+                    <div
+                        class="relative overflow-hidden aspect-video"
+                    >
+
+                        <img
+                            src="${g.banner}"
+                            alt="${g.name}"
+                            class="w-full h-full object-cover
+                                   group-hover:scale-110
+                                   transition duration-500"
+                        >
+
+
+                        <div
+                            class="absolute inset-0 bg-black/40
+                                   opacity-0 group-hover:opacity-100
+                                   transition-opacity
+                                   flex items-center justify-center"
+                        >
+
+                            <button
+                                onclick="window.open('${g.url}')"
+                                class="bg-[#e94560] px-6 py-2
+                                       rounded-lg font-gaming text-xs"
+                            >
+                                JOGAR AGORA
+                            </button>
+
                         </div>
+
                     </div>
-                    <div class="p-4 flex justify-between items-center bg-gradient-to-t from-black/20 to-transparent">
-                        <span class="text-xs font-bold uppercase truncate pr-2 tracking-wider">${g.name}</span>
-                        <button onclick="window.open('${g.url}')" class="w-9 h-9 bg-white/5 hover:bg-[#e94560] rounded-full flex items-center justify-center transition shrink-0">
-                            <i class="fas fa-play text-[10px]"></i>
+
+
+                    <div
+                        class="p-4 flex justify-between items-center
+                               bg-gradient-to-t
+                               from-black/20 to-transparent"
+                    >
+
+                        <span
+                            class="text-xs font-bold uppercase
+                                   truncate pr-2 tracking-wider"
+                        >
+                            ${g.name}
+                        </span>
+
+
+                        <button
+                            onclick="window.open('${g.url}')"
+                            class="w-9 h-9 bg-white/5
+                                   hover:bg-[#e94560]
+                                   rounded-full
+                                   flex items-center justify-center
+                                   transition shrink-0"
+                        >
+
+                            <i
+                                class="fas fa-play text-[10px]"
+                            ></i>
+
                         </button>
+
                     </div>
+
                 </div>
             `;
+
         }
 
-        // --- Autenticação ---
-        function openAuth() { document.getElementById('authModal').classList.remove('hidden'); }
-        function closeAuth() { document.getElementById('authModal').classList.add('hidden'); }
-        
+
+        // =====================================================
+        // Autenticação
+        // =====================================================
+
+        function openAuth() {
+
+            document
+                .getElementById(
+                    'authModal'
+                )
+                .classList
+                .remove('hidden');
+
+        }
+
+
+        function closeAuth() {
+
+            document
+                .getElementById(
+                    'authModal'
+                )
+                .classList
+                .add('hidden');
+
+        }
+
+
         function handleUserAuth() {
-            const u = document.getElementById('authUser').value.trim();
-            const p = document.getElementById('authPass').value;
-            if(!u || !p) return alert("Insira os dados de login.");
 
-            const tx = db.transaction([STORES.USERS], "readwrite");
-            const store = tx.objectStore(STORES.USERS);
-            store.get(u).onsuccess = (e) => {
-                const user = e.target.result;
-                if(user) {
-                    if(user.password === p) login(user);
-                    else alert("Utilizador existente: Senha Incorreta.");
-                } else {
-                    const newUser = { username: u, password: p, isCrown: false };
-                    store.add(newUser);
-                    login(newUser);
-                }
-            };
+            const u =
+                document
+                    .getElementById(
+                        'authUser'
+                    )
+                    .value
+                    .trim();
+
+
+            const p =
+                document
+                    .getElementById(
+                        'authPass'
+                    )
+                    .value;
+
+
+            if (
+                !u ||
+                !p
+            ) {
+
+                return alert(
+                    "Insira os dados de login."
+                );
+
+            }
+
+
+            const tx =
+                db.transaction(
+                    [STORES.USERS],
+                    "readwrite"
+                );
+
+
+            const store =
+                tx.objectStore(
+                    STORES.USERS
+                );
+
+
+            store
+                .get(u)
+                .onsuccess =
+                (e) => {
+
+                    const user =
+                        e.target.result;
+
+
+                    if (user) {
+
+                        if (
+                            user.password === p
+                        ) {
+
+                            login(user);
+
+                        }
+
+                        else {
+
+                            alert(
+                                "Utilizador existente: Senha Incorreta."
+                            );
+
+                        }
+
+                    }
+
+                    else {
+
+                        const newUser = {
+
+                            username: u,
+
+                            password: p,
+
+                            isCrown: false
+
+                        };
+
+
+                        store.add(
+                            newUser
+                        );
+
+
+                        login(
+                            newUser
+                        );
+
+                    }
+
+                };
+
         }
+
 
         function login(user) {
-            currentUser = user;
-            localStorage.setItem('td_session', JSON.stringify(user));
+
+            currentUser =
+                user;
+
+
+            localStorage.setItem(
+                'td_session',
+                JSON.stringify(
+                    user
+                )
+            );
+
+
             updateUserUI();
+
             closeAuth();
+
         }
+
 
         function logout() {
-            currentUser = null;
-            localStorage.removeItem('td_session');
+
+            currentUser =
+                null;
+
+
+            localStorage.removeItem(
+                'td_session'
+            );
+
+
             updateUserUI();
+
         }
 
+
         function updateUserUI() {
-            const area = document.getElementById('userArea');
-            if(currentUser) {
+
+            const area =
+                document.getElementById(
+                    'userArea'
+                );
+
+
+            if (currentUser) {
+
                 area.innerHTML = `
-                    <div class="flex items-center gap-3 bg-gray-800/40 p-1 pr-4 rounded-full border border-gray-700">
-                        <div class="w-8 h-8 bg-[#e94560] rounded-full flex items-center justify-center font-bold text-xs relative">
+
+                    <div
+                        class="flex items-center gap-3
+                               bg-gray-800/40 p-1 pr-4
+                               rounded-full border border-gray-700"
+                    >
+
+                        <div
+                            class="w-8 h-8 bg-[#e94560]
+                                   rounded-full flex
+                                   items-center justify-center
+                                   font-bold text-xs relative"
+                        >
+
                             ${currentUser.username[0].toUpperCase()}
-                            ${currentUser.isCrown ? '<i class="fas fa-crown absolute -top-1 -right-1 text-[8px] text-yellow-400"></i>' : ''}
+
+                            ${
+                                currentUser.isCrown
+                                    ? `
+                                        <i
+                                            class="fas fa-crown
+                                                   absolute -top-1 -right-1
+                                                   text-[8px]
+                                                   text-yellow-400"
+                                        ></i>
+                                      `
+                                    : ''
+                            }
+
                         </div>
-                        <span class="text-[10px] font-bold uppercase tracking-widest">${currentUser.username}</span>
-                        <button onclick="logout()" class="text-gray-500 hover:text-white transition"><i class="fas fa-power-off text-xs"></i></button>
+
+
+                        <span
+                            class="text-[10px] font-bold
+                                   uppercase tracking-widest"
+                        >
+                            ${currentUser.username}
+                        </span>
+
+
+                        <button
+                            onclick="logout()"
+                            class="text-gray-500
+                                   hover:text-white transition"
+                            title="Sair"
+                        >
+
+                            <i
+                                class="fas fa-power-off text-xs"
+                            ></i>
+
+                        </button>
+
                     </div>
+
                 `;
-            } else {
-                area.innerHTML = `<button onclick="openAuth()" class="bg-[#e94560] px-6 py-2 rounded-lg font-gaming text-xs hover:bg-[#ff4d6d] transition">LOG IN</button>`;
+
             }
+
+            else {
+
+                area.innerHTML = `
+
+                    <button
+                        onclick="openAuth()"
+                        class="bg-[#e94560]
+                               px-6 py-2 rounded-lg
+                               font-gaming text-xs
+                               hover:bg-[#ff4d6d]
+                               transition"
+                    >
+                        LOG IN
+                    </button>
+
+                `;
+
+            }
+
         }
+
     </script>
+
 </body>
 </html>
