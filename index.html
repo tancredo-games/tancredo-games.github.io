@@ -1,116 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tancredo Destroyer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
-        }
-
-        .font-gaming {
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .text-glow {
-            text-shadow: 0 0 15px rgba(233, 69, 96, 0.7);
-        }
-
-        .btn-play {
-            background: #e94560;
-            box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .btn-play:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
-            background: #ff4d6d;
-        }
-
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-    </style>
-</head>
-<body class="bg-[#0f0f1a] text-gray-100">
-
-    <!-- Header -->
-    <header class="fixed top-0 w-full z-50 bg-[#1a1a2e]/80 backdrop-blur-lg border-b border-gray-800">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="font-gaming text-xl md:text-2xl font-bold tracking-widest text-glow text-[#e94560]">
-                TANCREDO DESTROYER
-            </h1>
-            <nav class="hidden md:flex space-x-8 font-medium">
-                <a href="index.html" class="hover:text-[#e94560] transition">Início</a>
-                <a href="jogos.html" class="hover:text-[#e94560] transition text-[#e94560]">Jogos</a>
-                <a href="saves.html" class="hover:text-[#e94560] transition">Meus Saves</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero-gradient px-6">
-        <div class="container mx-auto text-center">
-            <div class="floating mb-8">
-                <i class="fas fa-gamepad text-6xl text-[#e94560] opacity-50"></i>
-            </div>
-            <h2 class="font-gaming text-5xl md:text-8xl font-bold mb-6 text-glow">
-                DOMINE O CAOS
-            </h2>
-            <p class="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-                Feito por: <span class="text-[#e94560] font-bold">Zoomax</span>. <br>
-                O <span class="text-[#e94560]">Tancredo DTR</span> foi criado com o objetivo de descontrair em meio a todo o caos escolar.
-            </p>
-            
-            <div class="flex flex-col items-center gap-6">
-                <!-- Botão principal redirecionando para a biblioteca de jogos -->
-                <a href="jogos.html" class="btn-play text-white px-12 py-5 rounded-full font-gaming text-2xl font-bold transition">
-                    JOGAR AGORA
-                </a>
-                
-                <p class="text-gray-500 text-sm mt-4 uppercase tracking-widest">Clique para fugir da rotina</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Rodapé (Footer) -->
-    <footer class="bg-[#0b0b14] border-t border-gray-800 py-12">
-        <div class="container mx-auto px-6 text-center">
-            <div class="flex flex-wrap justify-center gap-8 md:gap-16 mb-8 font-gaming text-sm tracking-widest">
-                <a href="index.html" class="hover:text-[#e94560] transition duration-300">INÍCIO</a>
-                <a href="jogos.html" class="hover:text-[#e94560] transition duration-300">JOGOS</a>
-                <a href="saves.html" class="hover:text-[#e94560] transition duration-300">SAVES</a>
-            </div>
-            
-            <div class="w-16 h-1 bg-[#e94560] mx-auto mb-8 opacity-30"></div>
-            
-            <p class="text-gray-600 text-xs">
-                &copy; 2024 TANCREDO DESTROYER | DESENVOLVIDO POR <span class="text-gray-400">ZOOMAX</span>
-            </p>
-        </div>
-    </footer>
-
-</body>
-</html>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101116"><meta name="description" content="Tancredo Destroyer: uma pausa na rotina, uma nova partida. Explore os jogos, scripts e sugestões.">
+<title>Tancredo Destroyer · Aperte o play</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+:root{--bg:#101116;--panel:#191b23;--ink:#f5f5ef;--muted:#9699a8;--lime:#c6fa57;--line:#ffffff15}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif}a{color:inherit;text-decoration:none}button,a{-webkit-tap-highlight-color:transparent}a:focus-visible{outline:3px solid var(--lime);outline-offset:6px}::selection{background:var(--lime);color:var(--bg)}.wrap{max-width:1240px;margin:auto;padding:0 44px}header{border-bottom:1px solid var(--line)}.header{height:92px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:12px}.mark{width:38px;height:38px;background:var(--lime);color:var(--bg);display:grid;place-items:center;border-radius:10px;font-size:23px;font-weight:800;transform:rotate(-7deg)}.brand-name{font-size:14px;letter-spacing:1px;font-weight:800}.brand-name small{display:block;color:var(--muted);font-size:9px;letter-spacing:3.5px;margin-top:3px}nav{display:flex;align-items:center;gap:32px;font-size:13px;font-weight:600}nav a{color:var(--muted);padding:10px 0}nav a:hover,nav a[aria-current]{color:var(--ink)}nav a[aria-current]{border-bottom:2px solid var(--lime)}.nav-play{background:#ffffff0a;border:1px solid var(--line);padding:11px 18px;border-radius:7px;color:var(--ink)}main{overflow:hidden}.hero{display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:25px;min-height:610px;padding-top:65px;padding-bottom:65px}.eyebrow{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:700;letter-spacing:2.3px;color:var(--lime)}.dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px #c6fa5750}h1{font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;font-size:clamp(65px,7.5vw,100px);line-height:.94;letter-spacing:-1.5px;text-transform:uppercase;margin:27px 0 24px;font-weight:800}h1 span{color:var(--lime)}.intro{max-width:385px;color:var(--muted);font-size:15px;line-height:1.85}.actions{display:flex;align-items:center;gap:24px;margin-top:32px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:30px;border-radius:7px;background:var(--lime);color:#151910;font-weight:800;font-size:13px;padding:18px 23px;transition:transform .2s,background .2s}.btn:hover{transform:translateY(-3px);background:#d6ff83}.text-link{font-size:12px;color:#c3c5ce}.text-link:hover{color:var(--lime)}.credit{margin-top:28px;color:#717584;font-size:11px}.credit b{color:#c2c5cf}.scene{position:relative;min-height:440px;display:grid;place-items:center}.scene:before{content:'';position:absolute;inset:8%;background:radial-gradient(ellipse,#a6dd3321,transparent 67%);filter:blur(15px)}.orbit{position:absolute;width:350px;height:350px;border:1px solid #c6fa5715;border-radius:50%;transform:rotate(-24deg) scaleX(1.25)}.orbit.two{width:270px;height:270px;border-style:dashed;border-color:#ffffff12}.scene svg{position:relative;width:110%;max-width:560px;transform:rotate(-12deg);filter:drop-shadow(0 35px 30px #0008)}.float-label{position:absolute;border:1px solid #ffffff16;border-radius:8px;background:#20232b;box-shadow:0 12px 30px #0004;padding:12px 16px;font-size:10px;letter-spacing:1px;font-weight:600}.label-top{top:34px;right:20px;transform:rotate(5deg)}.label-top span{color:var(--lime);margin-right:8px}.label-bottom{bottom:24px;left:30px;transform:rotate(-5deg);color:var(--muted)}.label-bottom b{color:var(--ink);display:block;font-size:13px;margin-bottom:4px}.cross{position:absolute;top:50px;left:25px;color:var(--lime);font-size:26px}.section-head{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:30px;margin-bottom:22px}.section-head h2{font-size:17px;margin:0;font-weight:600}.section-head span{font-size:10px;letter-spacing:1.5px;color:var(--muted)}.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-bottom:65px}.card{position:relative;display:flex;align-items:center;gap:22px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:29px;transition:border-color .2s,transform .2s}.card:hover{border-color:#c6fa5770;transform:translateY(-4px)}.icon{width:53px;height:53px;flex-shrink:0;border-radius:12px;background:#c6fa5711;display:grid;place-items:center;color:var(--lime)}.icon svg{width:25px;height:25px}.purple{color:#bba3ff;background:#bba3ff12}.card h3{font-size:16px;margin:0 0 8px}.card p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}.arrow{margin-left:auto;color:#777c8c;font-size:23px}.card:hover .arrow{color:var(--lime)}footer{border-top:1px solid var(--line)}.footer{min-height:90px;display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:10px;color:#757987}.footer strong{color:#c1c4cf;font-weight:500}.footer span:last-child{letter-spacing:1px}.skip{position:absolute;top:-80px;left:20px;z-index:10;background:var(--lime);color:#101116;padding:12px}.skip:focus{top:15px}@media(min-width:900px){.scene svg{animation:hover 6s ease-in-out infinite}@keyframes hover{50%{transform:rotate(-9deg) translateY(-10px)}}}@media(max-width:850px){.wrap{padding-left:26px;padding-right:26px}.hero{min-height:auto;gap:0;grid-template-columns:1.1fr 1fr}.scene{min-height:350px}.orbit{width:240px;height:240px}.orbit.two{width:185px;height:185px}.label-top{right:0}.label-bottom{left:0}.cards{gap:12px}.card{padding:22px;gap:15px}nav{gap:22px}}.actions .text-link{max-width:150px;line-height:1.6}@media(max-width:620px){nav{gap:12px}nav a:last-child{max-width:90px}.brand{gap:8px}.header{height:80px;gap:16px}.brand-name{font-size:11px}.brand-name small{font-size:8px;letter-spacing:2.4px}.mark{width:32px;height:32px}nav{gap:16px;font-size:11px}.nav-play{display:none}.hero{grid-template-columns:1fr;padding-top:43px;padding-bottom:23px}.eyebrow{font-size:9px}h1{font-size:80px;margin-top:24px}.intro{max-width:340px;font-size:14px}.scene{min-height:320px;margin-top:20px}.scene svg{max-width:370px;width:95%}.label-top{right:12px;top:20px}.label-bottom{bottom:12px;left:10px}.cross{top:30px}.cards{grid-template-columns:1fr;padding-bottom:38px}.section-head{padding-top:25px}.section-head span{font-size:8px}.footer{padding-top:23px;padding-bottom:23px;flex-direction:column;align-items:flex-start;gap:10px;min-height:auto}.actions{gap:20px}.btn{gap:25px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+<style>
+.community-wrap{padding-top:28px}.community{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;padding:38px 42px;border-radius:18px;background:#c6fa57;color:#15200c;box-shadow:0 12px 65px #c6fa5720}.community:before{content:'';position:absolute;right:-75px;top:-110px;width:370px;height:370px;border:48px solid #14200b08;border-radius:50%;z-index:-1}.community-kicker{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.community-kicker:before{content:'';width:7px;height:7px;border-radius:50%;background:#2e5113}.community h2{font-family:'Barlow Condensed',Impact,sans-serif;font-size:clamp(38px,4.5vw,60px);font-weight:800;line-height:1;margin:12px 0;letter-spacing:-.5px;text-transform:uppercase}.community p{font-size:13px;line-height:1.7;max-width:510px;margin:0;color:#354923}.community-action{display:flex;flex-direction:column;align-items:center;gap:12px}.community-button{display:flex;align-items:center;justify-content:center;gap:24px;background:#14200d;color:#f4ffe8;padding:21px 25px;font-size:14px;font-weight:800;border-radius:9px;box-shadow:0 8px 20px #14200d20;transition:transform .2s,background .2s;white-space:nowrap}.community-button:hover{background:#283e18;transform:translateY(-3px)}.community-button:focus-visible{outline:3px solid #14200d;outline-offset:5px}.community-note{font-size:10px;font-weight:600;color:#3c5228}.hero{min-height:540px;padding-top:48px;padding-bottom:48px}@media(max-width:760px){.community{grid-template-columns:1fr;gap:24px;padding:28px}.community-action{align-items:stretch}.community-button{white-space:normal;text-align:center}.community-note{text-align:center}.community-wrap{padding-top:20px}.hero{min-height:auto}}
+</style></head>
+<body><a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<header><div class="wrap header"><a class="brand" href="index.html" aria-label="Tancredo Destroyer, início"><span class="mark" aria-hidden="true">T</span><span class="brand-name">TANCREDO<small>DESTROYER</small></span></a><nav aria-label="Navegação principal"><a href="index.html" aria-current="page">Início</a><a href="jogos.html">Jogos</a><a href="scripts.html">Scripts e sugestões</a><a class="nav-play" href="jogos.html">Vamos jogar ↗</a></nav></div></header>
+<main id="conteudo"><section class="wrap community-wrap" aria-labelledby="community-title"><div class="community"><div><span class="community-kicker">A comunidade está aqui</span><h2 id="community-title">Grupão do Tancredo</h2><p>Cola com a gente no Google Classroom! Entre no grupão e faça parte da comunidade do Tancredo.</p></div><div class="community-action"><a class="community-button" href="https://classroom.google.com/c/ODk3NTI1NTM2NDY2?cjc=wc6eptly" target="_blank" rel="noopener noreferrer">ENTRAR NO GRUPÃO <span aria-hidden="true">↗</span></a><span class="community-note">Google Classroom · abre em uma nova aba</span></div></div></section><section class="wrap hero" aria-labelledby="titulo"><div><div class="eyebrow"><span class="dot"></span>SUA PAUSA. SUAS REGRAS.</div><h1 id="titulo">Menos rotina.<br><span>Mais jogo.</span></h1><p class="intro">O caos fica lá fora. Aqui, você escolhe a próxima aventura e transforma uma pausa em uma boa partida.</p><div class="actions"><a class="btn" href="jogos.html">Explorar jogos <span aria-hidden="true">↗</span></a><a class="text-link" href="scripts.html">Scripts e sugestões →</a></div><p class="credit">Criado por <b>Zoomax</b>. Feito para sair do modo automático.</p></div>
+<div class="scene" aria-hidden="true"><div class="orbit"></div><div class="orbit two"></div><span class="cross">✦</span><div class="float-label label-top"><span>●</span> APERTE O PLAY</div>
+<svg viewBox="0 0 560 380" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="shell" x1="180" y1="80" x2="340" y2="350" gradientUnits="userSpaceOnUse"><stop stop-color="#464b59"/><stop offset=".5" stop-color="#282d39"/><stop offset="1" stop-color="#171b23"/></linearGradient><linearGradient id="edge" x1="100" y1="100" x2="450" y2="310"><stop stop-color="#777d8d"/><stop offset="1" stop-color="#292d38"/></linearGradient><linearGradient id="button" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d8ff8a"/><stop offset="1" stop-color="#97c93b"/></linearGradient></defs><path d="M147 111Q150 77 190 76H223L236 99H325L340 76H375Q412 78 416 112" fill="#181c24" stroke="#4c5260" stroke-width="3"/><path d="M151 105C110 117 89 171 74 244C63 295 88 322 116 310L185 267H377L441 310C472 325 497 295 483 246C465 173 447 118 406 106C379 95 350 106 326 117H233C207 104 178 95 151 105Z" fill="url(#shell)" stroke="url(#edge)" stroke-width="3"/><path d="M83 250C110 173 132 140 172 133M394 129C436 143 454 185 475 250" stroke="#ffffff0c" stroke-width="3" stroke-linecap="round"/><rect x="222" y="128" width="114" height="63" rx="15" fill="#171b22" stroke="#4c5361"/><path d="M237 138H321" stroke="#c6fa57" stroke-opacity=".6" stroke-width="2"/><circle cx="171" cy="180" r="38" fill="#171b22" stroke="#494f5c" stroke-width="2"/><path d="M161 155H181V170H196V190H181V205H161V190H146V170H161V155Z" fill="#555d6e" stroke="#727a89"/><circle cx="231" cy="238" r="32" fill="#11151b" stroke="#4d5461" stroke-width="3"/><circle cx="231" cy="236" r="23" fill="#343b48" stroke="#6b7381" stroke-width="2"/><circle cx="328" cy="238" r="32" fill="#11151b" stroke="#4d5461" stroke-width="3"/><circle cx="328" cy="236" r="23" fill="#343b48" stroke="#6b7381" stroke-width="2"/><circle cx="393" cy="151" r="13" fill="url(#button)"/><circle cx="423" cy="180" r="13" fill="url(#button)"/><circle cx="393" cy="210" r="13" fill="url(#button)"/><circle cx="363" cy="180" r="13" fill="url(#button)"/><path d="M388 151H398M393 146V156M418 175L428 185M428 175L418 185" stroke="#40541f" stroke-width="2" stroke-linecap="round"/><circle cx="393" cy="210" r="5" stroke="#40541f" stroke-width="2"/><path d="M363 175L368 184H358L363 175Z" stroke="#40541f" stroke-width="2" stroke-linejoin="round"/><circle cx="278" cy="214" r="6" fill="#c6fa57"/><path d="M269 261H289" stroke="#555d6d" stroke-width="3" stroke-linecap="round"/></svg>
+<div class="float-label label-bottom"><b>Próxima missão?</b>Se divertir um pouco.</div></div></section>
+<section class="wrap" aria-labelledby="atalhos"><div class="section-head"><h2 id="atalhos">Escolha seu próximo destino</h2><span>SEU PONTO DE PARTIDA</span></div><div class="cards"><a class="card" href="jogos.html"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><div><h3>Biblioteca de jogos</h3><p>Encontre uma aventura para a sua pausa.</p></div><span class="arrow" aria-hidden="true">↗</span></a><a class="card" href="scripts.html"><span class="icon purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m8 6-6 6 6 6m8-12 6 6-6 6M14 3l-4 18"/></svg></span><div><h3>Scripts e sugestões</h3><p>Explore scripts e ideias para o Tancredo.</p></div><span class="arrow" aria-hidden="true">↗</span></a></div></section></main>
+<footer><div class="wrap footer"><span>© <span id="ano">2026</span> Tancredo Destroyer · Desenvolvido por <strong>Zoomax</strong></span><span>UMA PAUSA NA ROTINA. UM PLAY NA DIVERSÃO.</span></div></footer>
+<script>document.getElementById('ano').textContent=new Date().getFullYear()</script>
+</body></html>

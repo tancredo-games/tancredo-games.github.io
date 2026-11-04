@@ -1,0 +1,178 @@
+[
+  {
+    "name": "Minecraft",
+    "url": "Eaglercraft_1.12_Offline_en_US.html",
+    "category": "Sandbox",
+    "source": "Tancredo",
+    "external": false,
+    "versions": [
+      {
+        "name": "1.12.2 · Tancredo",
+        "url": "Eaglercraft_1.12_Offline_en_US.html"
+      },
+      {
+        "name": "1.8 · JavaScript",
+        "url": "games/Eaglercraft_1.8_JS.html"
+      },
+      {
+        "name": "1.8 · WebAssembly",
+        "url": "games/Eaglercraft_1.8_WASM.html"
+      },
+      {
+        "name": "1.12 JavaScript",
+        "url": "games/Eaglercraft_1.12_JS.html"
+      },
+      {
+        "name": "1.12 WebAssembly",
+        "url": "games/Eaglercraft_1.12_WASM.html"
+      }
+    ]
+  },
+  {
+    "name": "Minecraft JavaScript",
+    "url": "games/Eaglercraft_1.8_JS.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": false
+  },
+  {
+    "name": "Minecraft WebAssembly",
+    "url": "games/Eaglercraft_1.8_WASM.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": false
+  },
+  {
+    "name": "Minecraft 1.12 JavaScript",
+    "url": "games/Eaglercraft_1.12_JS.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": false
+  },
+  {
+    "name": "Minecraft 1.12 WebAssembly",
+    "url": "games/Eaglercraft_1.12_WASM.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": false
+  },
+  {
+    "name": "Celeste",
+    "url": "games/Celeste.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Terraria",
+    "url": "games/Terraria.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "ADOFAI",
+    "url": "games/clADOFAI.html",
+    "category": "Ritmo",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Chicken CS",
+    "url": "games/clChickenCS.html",
+    "category": "Ação",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Helltaker",
+    "url": "games/clHelltaker.html",
+    "category": "Ação",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Angry Birds",
+    "url": "games/clangrybirds.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Animal Crossing",
+    "url": "games/clanimalcrossing.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Celeste 2",
+    "url": "games/clceleste2.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Cookie Clicker",
+    "url": "games/clcookieclicker.html",
+    "category": "Sandbox",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Crossy Road",
+    "url": "games/clcrossyroad.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Five Nights at Epstein's",
+    "url": "games/clfivenightsatepsteins.html",
+    "category": "Ação",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Half-Life",
+    "url": "games/clhalflife.html",
+    "category": "Ação",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Pizza Tower",
+    "url": "games/clpizzatower.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Polytrack",
+    "url": "games/clpolytrackworksnow.html",
+    "category": "Corrida",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Sonic Mania Plus",
+    "url": "games/clsonicmaniaplus.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Spelunky",
+    "url": "games/clspelunky.html",
+    "category": "Plataforma",
+    "source": "Bacanos",
+    "external": true
+  },
+  {
+    "name": "Survivorio",
+    "url": "games/clsurvivorio.html",
+    "category": "Ação",
+    "source": "Bacanos",
+    "external": true
+  }
+]
