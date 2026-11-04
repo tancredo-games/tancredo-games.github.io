@@ -1,0 +1,25 @@
+[Uploading LEIA-ME.txt…]()
+TANCREDO GAMES — ATUALIZAÇÃO PARA GITHUB PAGES
+
+1. Extraia este ZIP no seu computador.
+2. Copie os arquivos e pastas para a raiz do repositório Tancredo-games.github.io.
+   O index.html deve ficar na raiz, junto de jogos.html, scripts.html e jogar.html.
+   Preserve as pastas games e assets com todos os arquivos dentro delas.
+3. Substitua os arquivos antigos quando for solicitado.
+4. Remova vortexp2p.html e saves.html antigos do repositório se ainda estiverem lá.
+5. Faça o commit. Aguarde o GitHub Pages atualizar.
+
+Se usar o navegador do GitHub: Add file > Upload files. Envie os arquivos
+extraídos e as pastas, não o ZIP. Como há muitos arquivos, você pode enviar
+as pastas em etapas mantendo seus nomes e caminhos.
+
+Incluído: início com o link atualizado do Classroom (wc6eptly), biblioteca
+com 18 cards e capas, Minecraft com 5 versões, scripts e sugestões locais.
+As sugestões ficam apenas no navegador; não são enviadas ao dono do site.
+Alguns jogos dependem de internet e serviços externos.
+
+Não apague os arquivos .part*.bin: são partes do Minecraft 1.12 JavaScript.
+O .nojekyll permite publicar os arquivos estáticos sem processamento Jekyll.
+Não é necessário instalar Node, npm ou qualquer dependência para publicar.
+Para testar antes de publicar, use um servidor HTTP local. Abrir diretamente
+pelo explorador de arquivos pode impedir o catálogo e alguns jogos de carregar.
